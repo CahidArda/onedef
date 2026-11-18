@@ -1,0 +1,48 @@
+---
+title: Run stores
+description: Where a paused run waits between calls. Memory for tests, any key-value store, or Redis.
+---
+
+A paused run has to outlive the request that started it. The answer may come seconds or
+days later, on another serverless instance. So runs wait in a **run store**:
+
+```ts
+registerWorkflowTool(server, 'deploy', { runStore }, deploy)
+```
+
+| store | import from | use it for |
+| --- | --- | --- |
+| `memoryRunStore()` | `@onedef/mcp-elicitation-workflow` | tests, or one long-lived server |
+| `redisRunStore(redis)` | `@onedef/mcp-elicitation-workflow/redis` | serverless |
+| `kvRunStore(kv)` | `@onedef/mcp-elicitation-workflow` | any key-value store, such as files |
+
+## Redis
+
+```ts
+import { Redis } from '@upstash/redis'
+import { redisRunStore } from '@onedef/mcp-elicitation-workflow/redis'
+
+const runStore = redisRunStore(Redis.fromEnv())
+```
+
+Runs expire 7 days after their last write. Change it with `{ ttlSeconds }`, and the key
+prefix (default `onedef:`) with `{ prefix }`. Any Redis client with the same few commands
+works.
+
+## Files, or any key-value store
+
+```ts
+import { kvRunStore } from '@onedef/mcp-elicitation-workflow'
+import { fsStore } from '@onedef/store/fs'
+
+const runStore = kvRunStore(fsStore('.data'))
+```
+
+Runs go under `.data/_runs`. `kvRunStore` takes any store with `get`, `put`, `delete` and
+`list`, where `put` can write "only if absent". That atomic write is what stops two calls
+racing on the same run.
+
+## Your own
+
+A run store is TanStack Workflow's `RunStore` interface, so a store written for TanStack
+Workflow works here too.

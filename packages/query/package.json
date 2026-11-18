@@ -1,0 +1,43 @@
+{
+  "name": "@onedef/query",
+  "version": "0.2.0",
+  "description": "TanStack Query integration for onedef clients: typed queryOptions/mutationOptions for every op, query keys from the contract, and cache invalidation derived from it. Works with every TanStack Query adapter (React, Vue, Solid, Svelte, Angular).",
+  "license": "MIT",
+  "homepage": "https://onedef.cahidarda.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CahidArda/onedef.git",
+    "directory": "packages/query"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "onedef": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/query-core": "^5"
+  },
+  "devDependencies": {
+    "@tanstack/query-core": "^5",
+    "@types/node": "^24",
+    "zod": "^4.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

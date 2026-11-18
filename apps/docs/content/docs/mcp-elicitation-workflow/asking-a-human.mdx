@@ -1,0 +1,104 @@
+---
+title: Ask the user
+description: ctx.elicitHumanInput shows a form in the client's own elicitation UI, and the workflow continues with the answer.
+---
+
+`ctx.elicitHumanInput` takes the same params as MCP elicitation, `message` and
+`requestedSchema`, and returns the same result, `{ action, content }`.
+
+```ts
+import { createWorkflow } from '@onedef/mcp-elicitation-workflow'
+import { z } from 'zod'
+
+const releaseForm = {
+  type: 'object',
+  properties: {
+    channel: { type: 'string', enum: ['stable', 'beta'] },
+  },
+  required: ['channel'],
+} as const
+
+export const release = createWorkflow({
+  id: 'release',
+  input: z.object({ version: z.string() }),
+}).handler(async (ctx) => {
+  const build = await ctx.step('build', () => buildApp())
+
+  const answer = await ctx.elicitHumanInput({
+    message: `Publish ${ctx.input.version}?`,
+    requestedSchema: releaseForm,
+  })
+  if (answer.action !== 'accept') return 'cancelled'
+
+  return ctx.step('ship', () => ship(build, answer.content?.channel))
+})
+```
+
+## The answer
+
+`answer.action` says what the user did:
+
+| action | meaning | `content` |
+| --- | --- | --- |
+| `accept` | submitted the form | the fields |
+| `decline` | said no | none |
+| `cancel` | dismissed it, or the client can't show forms | none |
+
+Every answer goes to your workflow, which decides what happens next.
+
+## The form
+
+`requestedSchema` follows MCP's rules: one flat object of strings, numbers, booleans and
+enums. If a submitted form is missing a `required` field, it is rejected and the run keeps
+waiting.
+
+A workflow can ask more than once. Questions are named by position (`elicit-1`,
+`elicit-2`). To name one yourself, pass an id:
+
+```ts
+await ctx.elicitHumanInput(params, { id: 'confirm-release' })
+```
+
+## What happens on the wire
+
+1. The run reaches the question. The tool returns `input_required` with the form, and the
+   run's id as `requestState`.
+2. The client shows the form, then calls the tool again with the answer.
+3. The run replays. Finished steps return their recorded results, and the workflow
+   continues right after the question.
+
+On older connections, the MCP SDK sends the form as an `elicitation/create` request
+instead. Your workflow doesn't change.
+
+## Testing with Claude Code
+
+Headless `claude -p` cancels every form, because nobody is there to answer. An
+`Elicitation` hook can answer for you:
+
+```bash title="answer.sh"
+#!/bin/bash
+echo '{"hookSpecificOutput": {"hookEventName": "Elicitation", "action": "accept", "content": {"channel": "beta"}}}'
+```
+
+```json title="settings.json"
+{
+  "hooks": {
+    "Elicitation": [{ "matcher": ".*", "hooks": [{ "type": "command", "command": "./answer.sh" }] }]
+  }
+}
+```
+
+```bash
+claude -p "Release 2.1.0" --settings settings.json --mcp-config mcp.json
+```
+
+## Yes-or-no approvals
+
+For a plain yes or no, TanStack Workflow's `ctx.approve` also works. Over MCP it shows a
+form with an **Approve** checkbox and an optional **Feedback** field:
+
+```ts
+const { approved } = await ctx.approve({ title: `Deploy ${build.id}?` })
+```
+
+Declining or dismissing the form counts as not approved.

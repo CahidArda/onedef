@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  // `..` because the tests import @onedef/orpc's source to check the nav against the real router
+  "compilerOptions": { "rootDir": ".." },
+  "include": ["src", "test"]
+}

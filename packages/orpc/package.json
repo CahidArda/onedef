@@ -1,0 +1,57 @@
+{
+  "name": "@onedef/orpc",
+  "version": "0.2.0",
+  "description": "Host a onedef backend over oRPC (RPC + REST + OpenAPI) with one fetch handler, and call it from anywhere with the rpc() transport.",
+  "license": "MIT",
+  "homepage": "https://onedef.cahidarda.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CahidArda/onedef.git",
+    "directory": "packages/orpc"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "onedef": "workspace:*"
+  },
+  "peerDependencies": {
+    "@orpc/server": "^1",
+    "@orpc/openapi": "^1",
+    "@orpc/client": "^1"
+  },
+  "devDependencies": {
+    "@orpc/server": "^1",
+    "@orpc/openapi": "^1",
+    "@orpc/client": "^1",
+    "@types/node": "^24",
+    "zod": "^4.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@orpc/client": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

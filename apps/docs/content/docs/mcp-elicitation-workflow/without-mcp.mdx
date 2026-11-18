@@ -1,0 +1,62 @@
+---
+title: Without MCP
+description: Drive runs from your own code, such as a web form, a Slack button, a queue or a test.
+---
+
+MCP is one way to drive a run. `workflowRuns` lets your own code do it: start a run, read
+its question, answer it later.
+
+```ts
+import { workflowRuns } from '@onedef/mcp-elicitation-workflow'
+
+const runs = workflowRuns(release, { runStore })
+
+const run = await runs.start({ version: '2.1.0' })
+// run.status      → 'waiting'
+// run.waitingFor  → { kind: 'human', message: 'Publish 2.1.0?', requestedSchema }
+```
+
+Show the question however you like. Send the answer with `next`, minutes or days later,
+from any process:
+
+```ts
+const done = await runs.next(run.runId, { action: 'accept', content: { channel: 'beta' } })
+// done.status → 'done'
+// done.output → the workflow's return value
+```
+
+The answer depends on what asked:
+
+| `waitingFor.kind` | asked by | answer with |
+| --- | --- | --- |
+| `human` | `ctx.elicitHumanInput` | `{ action, content? }` |
+| `agent` | `ctx.elicitAgentInput` | a value matching `waitingFor.schema` |
+| `approval` | `ctx.approve` | `{ approved, feedback? }` |
+
+`runs.next(runId)` with no answer just returns where the run is. A wrong answer throws a
+`RunError` with code `INVALID_INPUT`, and the run stays where it was.
+
+## Some ways to use it
+
+- **Web app:** start the run in a route and keep the `runId`. Render a form from
+  `requestedSchema`, and call `next` when it's submitted.
+- **Slack or email:** post the question with buttons. The button's webhook calls `next`.
+- **Tests:** start, check `waitingFor`, answer, check `output`.
+
+## Headless runs
+
+A headless run is one nobody will answer, such as a nightly job. MCP servers don't need it.
+
+```ts
+await runs.start(input, { headless: true })
+```
+
+In a headless run, `ctx.elicitHumanInput` returns `{ action: 'cancel' }`, and
+`ctx.elicitAgentInput` fails the run. To finish anyway, check `ctx.headless` and do the
+agent's step yourself:
+
+```ts
+const outline = ctx.headless
+  ? await ctx.step('outline', () => myModel.outline(topic))
+  : await ctx.elicitAgentInput('outline', { schema: Outline, data: { topic } })
+```

@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "rootDir": ".", "paths": { "@onedef/next/mcp-app": ["./src/mcp-app.tsx"] } },
+  "include": ["src", "test"],
+  "exclude": ["test/fixture/.onedef"]
+}

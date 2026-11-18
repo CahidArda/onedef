@@ -1,0 +1,203 @@
+---
+title: Quick start
+description: A notes API with REST, OpenAPI and an MCP server, in a Next.js app.
+---
+
+You'll build a small notes API and get, without writing any of it by hand:
+
+- REST endpoints and an OpenAPI document,
+- an MCP server that Claude Code can use,
+- a typed client for your pages.
+
+The finished code is [`examples/quickstart`](https://github.com/CahidArda/onedef/tree/main/examples/quickstart)
+in the repository.
+
+<Steps>
+
+<Step>
+
+### Install
+
+In a Next.js app (App Router):
+
+```bash
+pnpm add onedef @onedef/orpc @onedef/mcp @modelcontextprotocol/server zod
+```
+
+</Step>
+
+<Step>
+
+### Describe the API: `lib/contract.ts`
+
+The contract says what your API is. It has no server code, so any client can import it.
+
+```ts title="lib/contract.ts"
+import { action, collection, defineApi, defineConfig } from 'onedef'
+import { z } from 'zod'
+
+export const config = defineConfig({ name: 'notes', description: 'A tiny notes API.' })
+
+const Note = z.object({
+  id: z.string(),
+  title: z.string(),
+  done: z.boolean(),
+})
+
+export const notes = collection(config, {
+  name: 'notes',
+  description: 'Your notes.',
+  id: 'id',
+  fields: Note,
+  create: { input: z.object({ title: z.string().describe('What to remember') }) },
+  actions: {
+    complete: action({ summary: 'Mark a note as done', output: Note, needs: 'object' }),
+  },
+})
+
+export const contract = defineApi(config, { notes })
+```
+
+A `collection` always has `list` and `get`. Here it also has `create`, and one action of
+your own, `complete`. `needs: 'object'` means the handler receives the note, already loaded.
+
+</Step>
+
+<Step>
+
+### Implement it: `lib/backend.ts`
+
+One handler per operation. TypeScript checks every one against the contract.
+
+```ts title="lib/backend.ts"
+import { fail, implement } from 'onedef'
+import { contract } from './contract'
+
+// A Map stands in for your database.
+const db = new Map<string, { id: string; title: string; done: boolean }>()
+
+export const backend = implement(contract, {
+  notes: {
+    list: () => [...db.values()],
+    get: ({ id }) => db.get(id) ?? fail('NOT_FOUND', `No note "${id}"`),
+    create: ({ input }) => {
+      const note = { id: crypto.randomUUID(), title: input.title, done: false }
+      db.set(note.id, note)
+      return note
+    },
+    complete: ({ object }) => {
+      const note = { ...object, done: true }
+      db.set(note.id, note)
+      return note
+    },
+  },
+})
+```
+
+Try deleting the `complete` handler: the file stops compiling.
+
+</Step>
+
+<Step>
+
+### Serve it: two route files
+
+```ts title="app/api/[[...route]]/route.ts"
+// REST, RPC and the OpenAPI document, under /api
+import { toNextHandlers } from '@onedef/orpc'
+import { backend } from '@/lib/backend'
+
+export const { GET, POST, PUT, PATCH, DELETE, OPTIONS } = toNextHandlers(backend)
+```
+
+```ts title="app/mcp/route.ts"
+// The MCP server, at /mcp
+import { createMcpHandler } from '@onedef/mcp'
+import { backend } from '@/lib/backend'
+
+const handler = createMcpHandler(backend)
+export { handler as GET, handler as POST, handler as DELETE }
+```
+
+</Step>
+
+<Step>
+
+### Try it
+
+Run `pnpm dev`, then:
+
+```bash
+curl -X POST localhost:3000/api/notes -H 'content-type: application/json' -d '{"title":"Buy milk"}'
+```
+
+```bash
+curl localhost:3000/api/notes
+```
+
+```bash
+curl localhost:3000/api/openapi.json
+```
+
+Connect Claude Code to the MCP server, and ask for something in plain words:
+
+```bash
+claude mcp add --transport http notes http://localhost:3000/mcp
+```
+
+```text
+> Add a note titled "Call mom", mark it as done, then list my notes.
+```
+
+Claude finds `notes_create`, `notes_complete` and `notes_list` on its own. Their
+descriptions come from your contract.
+
+</Step>
+
+<Step>
+
+### Use it from a page
+
+The typed client calls the same API, with the contract's types:
+
+```tsx title="app/page.tsx"
+'use client'
+import { rpc } from '@onedef/orpc/client'
+import { createClient } from 'onedef'
+import { useEffect, useState } from 'react'
+import { contract } from '@/lib/contract'
+
+const api = createClient(contract, rpc({ url: '/api' }))
+
+export default function Home() {
+  const [notes, setNotes] = useState<Awaited<ReturnType<typeof api.notes.list>>>([])
+  useEffect(() => {
+    api.notes.list().then(setNotes)
+  }, [])
+  return <ul>{notes.map((note) => <li key={note.id}>{note.title}</li>)}</ul>
+}
+```
+
+`note.title` is typed, and so is every input. Rename a field in the contract, and this page
+stops compiling until it's fixed.
+
+</Step>
+
+</Steps>
+
+## Next
+
+<Cards>
+  <Card title="Show your UI inside Claude" href="/docs/surfaces/mcp-apps">
+    The same React screens, rendered as an MCP App.
+  </Card>
+  <Card title="Add sign-in" href="/docs/guides/auth">
+    OAuth for MCP clients, a session for the website, login for the CLI.
+  </Card>
+  <Card title="Add a CLI" href="/docs/surfaces/cli">
+    Commands, flags and `login`, derived from the contract.
+  </Card>
+  <Card title="Cache it in React" href="/docs/surfaces/react-query">
+    TanStack Query keys and invalidation from the contract.
+  </Card>
+</Cards>

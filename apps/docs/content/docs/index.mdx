@@ -1,0 +1,101 @@
+---
+title: What is onedef?
+description: Define your API once. Get a backend, a typed client, REST with OpenAPI, an MCP server, an MCP App, a CLI and docs from it.
+---
+
+**onedef turns one TypeScript description of your API into every way people and agents
+use it.** You write the contract and the handlers once. onedef gives you:
+
+- a **backend** with validated input and output,
+- **REST + RPC** with an **OpenAPI** document,
+- a **typed client** for your web app and your SDK,
+- an **MCP server**, so Claude, ChatGPT and Cursor can call your API as tools,
+- an **MCP App**: your own UI, rendered inside Claude and ChatGPT,
+- a **CLI** with `login` (OAuth or API key),
+- **TanStack Query** helpers with cache keys and invalidation worked out for you,
+- and **API docs**.
+
+<Diagram name="one-contract" alt="The contract and its handlers produce REST with OpenAPI and a typed client; an MCP server and MCP App; and a CLI and TanStack Query helpers." />
+
+Add a field or an endpoint in one place, and every surface has it. Forget a handler, and
+it's a compile error.
+
+```ts title="contract.ts"
+export const notes = collection(config, {
+  name: 'notes',
+  description: 'Your notes.',
+  id: 'id',
+  fields: Note,
+  create: { input: z.object({ title: z.string() }) },
+  actions: { complete: action({ summary: 'Mark a note as done', output: Note, needs: 'object' }) },
+})
+```
+
+From that one declaration:
+
+| surface | what you get | how |
+| --- | --- | --- |
+| REST | `GET /api/notes`, `GET /api/notes/{id}`, `POST /api/notes`, `POST /api/notes/{id}/complete` | `toNextHandlers(backend)` |
+| OpenAPI | `/api/openapi.json` | same line |
+| MCP | tools `notes_list`, `notes_get`, `notes_create`, `notes_complete` | `createMcpHandler(backend)` |
+| typed client | `api.notes.complete({ id })`, fully typed | `createClient(contract, rpc({ url: '/api' }))` |
+| CLI | `notes notes complete <id>` | `runCli(contract, …)` |
+| React | `useQuery(q.notes.get.queryOptions({ id }))` | `createQueryUtils(contract, client)` |
+
+<Cards>
+  <Card title="Quick start" href="/docs/quickstart">
+    A working API, MCP server and OpenAPI document in five minutes, in Next.js.
+  </Card>
+  <Card title="MCP elicitation workflow" href="/docs/mcp-elicitation-workflow">
+    Using MCP without onedef? Add tools that stop to ask the user or the agent and
+    continue where they stopped. Works on any MCP SDK server.
+  </Card>
+</Cards>
+
+## Why onedef
+
+**Agents are now users of your API.** One product often needs a web app, a public API, an
+SDK, a CLI and an MCP server. Usually each one is written by hand, and each one drifts from
+the others: a field the web app has and the MCP server doesn't, a CLI that lags the API.
+
+onedef makes them one thing:
+
+- **One source of truth.** The contract is a value: zod (or any Standard Schema) types plus
+  a summary per operation. Every surface is derived from it, including tool names,
+  descriptions, CLI commands, REST paths and the OpenAPI document.
+- **Type-safe end to end.** Handlers are checked against the contract, and clients are typed
+  from it. A missing handler, a misspelled op or a wrong return shape is a compile error.
+- **Server code stays on the server.** The contract holds no handler code, so importing it
+  in a browser, a CLI or a published SDK never pulls in your backend.
+- **Built for agents.** MCP tools carry your descriptions. MCP Apps render your real UI
+  inside Claude and ChatGPT. Long tasks can pause to ask the user or the agent and continue
+  where they stopped.
+- **Fits what you have.** Plain fetch handlers work in Next.js, Hono, Bun, Deno and
+  workers. Your own database stays yours. Describe an API you already run, and onedef gives
+  it an MCP server, a CLI and a typed client without a new backend.
+
+## How it fits together
+
+```
+          contract.ts                       one value: schemas + summaries, no server code
+              │
+   ┌──────────┴─────────────┐
+   │                        │
+backend.ts            every client surface
+implement(contract,   createClient(contract, transport)
+  handlers)            runCli(contract, …)
+   │                   createQueryUtils(contract, client)
+   │
+   ├── toNextHandlers(backend)     REST + RPC + /openapi.json
+   └── createMcpHandler(backend)   MCP tools (+ MCP App)
+```
+
+A **transport** decides who answers a call: `rpc()` over HTTP, `local()` in process,
+`mcpApp()` through the MCP host, or `http()` against an existing REST API. The same client
+code runs on all of them.
+
+## Status
+
+onedef is new and not on npm yet. The examples run from the
+[repository](https://github.com/CahidArda/onedef) today; the install commands in these docs
+are the ones that will work once it is published.

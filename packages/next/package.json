@@ -1,0 +1,67 @@
+{
+  "name": "@onedef/next",
+  "version": "0.2.0",
+  "description": "Next.js integration for onedef: withOnedef() builds your MCP App inside next build / next dev from one entry file, serveMcpApp() serves it from the /mcp route, and defineMcpApp() gives the app typed routes and launch targets.",
+  "license": "MIT",
+  "homepage": "https://onedef.cahidarda.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CahidArda/onedef.git",
+    "directory": "packages/next"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "default": "./dist/server.js"
+    },
+    "./mcp-app": {
+      "types": "./dist/mcp-app.d.ts",
+      "import": "./dist/mcp-app.js",
+      "default": "./dist/mcp-app.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test test/*.test.ts test/*.test.tsx"
+  },
+  "dependencies": {
+    "@onedef/mcp": "workspace:*",
+    "@onedef/query": "workspace:*",
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.3.0",
+    "onedef": "workspace:*",
+    "vite": "^8.3.8",
+    "vite-plugin-singlefile": "^2.3.4"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5",
+    "next": ">=15",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.107.1",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "next": "^16.2.9",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zod": "^4.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

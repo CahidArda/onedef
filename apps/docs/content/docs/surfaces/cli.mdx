@@ -1,0 +1,48 @@
+---
+title: CLI
+description: A command-line tool with login, generated from the contract. It ships no handler code.
+---
+
+```ts title="cli.ts"
+#!/usr/bin/env node
+import { runCli } from '@onedef/cli'
+import { rpc } from '@onedef/orpc/client'
+import { contract } from './contract'
+
+await runCli(contract, { transport: rpc({ url: 'https://api.acme.dev/api' }) })
+```
+
+Publish it with a `bin` entry, and every operation is a command:
+
+```bash
+acme songs list --q piaf --limit 20
+acme songs get la-vie-en-rose
+acme songs rename la-vie-en-rose --title "La Vie en rose"
+acme songs delete la-vie-en-rose --yes
+```
+
+- **Commands and flags** come from operations and input fields; `--help` uses your summaries.
+- **Output:** lists print as tables, with the next-page command when there is one. Pass
+  `--json` for scripts.
+- **Destructive operations** ask for `--yes`.
+- **Errors** print their code and message, and exit non-zero.
+
+## Login
+
+With `auth` in your config, the CLI gets `login`, `logout` and `whoami`:
+
+```bash
+acme login                # OAuth in the browser
+acme login --with-token   # paste an API key
+ACME_API_KEY=… acme …     # CI: credentials from the environment
+```
+
+`acme login` signs in exactly like an MCP client does. It discovers your authorization
+server from the API, registers with CIMD (or DCR as a fallback), and logs in with PKCE
+through a local callback. Tokens are refreshed before they expire. Credentials are stored
+in `~/.config/acme/credentials.json` with `0600` permissions. See [Auth](/docs/guides/auth).
+
+## An agent skill
+
+`toSkillMarkdown(contract, { bin: 'acme' })` writes a `SKILL.md` that teaches an agent to use your CLI, for
+agents that work in a terminal.

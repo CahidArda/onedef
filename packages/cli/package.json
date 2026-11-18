@@ -1,0 +1,47 @@
+{
+  "name": "@onedef/cli",
+  "version": "0.2.0",
+  "description": "A complete CLI for a onedef contract: commands, help, tables, exit codes, and login (API keys and OAuth).",
+  "license": "MIT",
+  "homepage": "https://onedef.cahidarda.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CahidArda/onedef.git",
+    "directory": "packages/cli"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "onedef": "workspace:*"
+  },
+  "devDependencies": {
+    "zod": "^4.2.0",
+    "@modelcontextprotocol/client": "^2"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/client": "^2"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/client": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

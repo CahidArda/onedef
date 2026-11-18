@@ -1,0 +1,106 @@
+---
+title: API reference
+description: Everything @onedef/mcp-elicitation-workflow exports.
+---
+
+## `createWorkflow`
+
+```ts
+import { createWorkflow } from '@onedef/mcp-elicitation-workflow'
+
+const deploy = createWorkflow({ id: 'deploy', input: schema }).handler(async (ctx) => {
+  // …
+})
+```
+
+| option | |
+| --- | --- |
+| `id` | the workflow's name |
+| `description` | optional; the MCP tool's default description |
+| `input` | optional; a zod, valibot or arktype schema for `ctx.input` |
+| `agentInput` | optional, default `false`. `true` adds `ctx.elicitAgentInput` and the `<name>_next` tool. Without it, calling `ctx.elicitAgentInput` is a type error |
+
+This is TanStack Workflow's `createWorkflow` with the questions already added.
+
+## `ctx`
+
+| | returns |
+| --- | --- |
+| `ctx.elicitHumanInput({ message, requestedSchema }, { id? })` | `{ action, content? }` |
+| `ctx.elicitAgentInput(name, { schema, instructions?, data? })` | a value matching `schema`; only with `agentInput: true` |
+| `ctx.step(name, fn)` | what `fn` returns; on replay, the recorded result |
+| `ctx.input` | the validated input |
+| `ctx.approve({ title, description? })` | `{ approved, feedback? }` |
+| `ctx.headless` | `true` in a run started with `{ headless: true }` |
+
+## `registerWorkflowTool`
+
+```ts
+import { registerWorkflowTool } from '@onedef/mcp-elicitation-workflow/mcp'
+
+registerWorkflowTool(server, 'deploy', { runStore }, deploy)
+```
+
+| config | |
+| --- | --- |
+| `runStore` | required; where runs wait between calls |
+| `title` | optional |
+| `description` | optional; default: the workflow's description |
+| `inputSchema` | optional; default: the workflow's input schema |
+| `annotations` | optional; MCP tool annotations |
+
+Registers `deploy`, which starts a run; questions for the user use MCP elicitation. For a
+workflow with `agentInput: true`, also registers `deploy_next` (`{ runId, payload? }`), where
+the agent answers `ctx.elicitAgentInput`.
+
+## `workflowRuns`
+
+```ts
+const runs = workflowRuns(deploy, { runStore })
+
+await runs.start(input, { headless? })   // → RunSnapshot
+await runs.next(runId, answer?)          // → RunSnapshot
+```
+
+A `RunSnapshot` has:
+
+| field | |
+| --- | --- |
+| `runId` | the run's id |
+| `status` | `'waiting'`, `'done'` or `'failed'` |
+| `waitingFor` | when waiting: the question, with `kind` `'human'`, `'agent'` or `'approval'` |
+| `output` | when done: the workflow's return value |
+| `error` | when failed: `{ message, code? }` |
+
+`RunError` codes:
+
+| code | when |
+| --- | --- |
+| `INVALID_INPUT` | the answer was rejected; the run did not move |
+| `NOT_FOUND` | no run with that id |
+| `NO_ANSWER` | an agent question in a headless run |
+
+## Run stores
+
+| | |
+| --- | --- |
+| `memoryRunStore()` | in memory |
+| `kvRunStore(kv, { namespace? })` | on a key-value store; default namespace `_runs` |
+| `redisRunStore(redis, { prefix?, ttlSeconds? })` | from `/redis`; default prefix `onedef:`, 7-day TTL |
+
+## Already using TanStack Workflow?
+
+Add the questions to TanStack's own `createWorkflow` with the middleware:
+
+```ts
+import { createWorkflow } from '@tanstack/workflow-core'
+import { mcpElicitation } from '@onedef/mcp-elicitation-workflow'
+
+const deploy = createWorkflow({ id: 'deploy' })
+  .middleware([mcpElicitation()])
+  .handler(async (ctx) => {
+    // …
+  })
+```
+
+`mcpElicitation({ agentInput: true })` adds `ctx.elicitAgentInput` too.

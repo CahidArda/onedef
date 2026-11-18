@@ -1,0 +1,53 @@
+---
+title: Storage
+description: Bring your own database, or let implementStore write the persistence for simple objects.
+---
+
+`implement()` doesn't care where your data lives. Handlers call your database, an ORM,
+files or another API. **That's the normal case**, and nothing on this page is required.
+
+## `implementStore`: persistence written for you
+
+When the objects are simple enough to sit in a key-value store, `implementStore` writes
+`list`, `get` and `delete`, and you keep only the handlers that hold logic:
+
+```ts
+import { implementStore } from '@onedef/store'
+import { fsStore } from '@onedef/store/fs'
+
+export const backend = implementStore(contract, fsStore('.data'), {
+  songs: {
+    create: ({ input }) => ({ slug: slugify(input.title), ...input }),   // return the new object
+    rename: ({ object, input }) => ({ ...object, title: input.title }),  // return it changed: written back
+  },
+})
+```
+
+- `list` supports `paginate: 'cursor'` and filters by equality on fields of the object.
+- `create` fails with `CONFLICT` when the id is taken.
+- An action that returns the object is written back.
+- Every generated handler can be overridden.
+- Objects are validated against `fields` before they are written.
+
+## Stores
+
+| store | from | for |
+| --- | --- | --- |
+| `memoryStore()` | `@onedef/store` | tests, demos |
+| `fsStore(dir)` | `@onedef/store/fs` | local development, one server. JSON files you can read and edit by hand. |
+| `redisStore(redis)` | `@onedef/store/redis` | serverless deploys, through `@upstash/redis` |
+
+Swapping one store for another changes nothing else. A store is four methods (`get`, `put`,
+`delete`, `list`), so writing your own is short.
+
+## Per-user data
+
+`partition` keeps each user's or tenant's objects apart:
+
+```ts
+implementStore(contract, store, {
+  context: ({ request }) => identify(request),
+  partition: ({ ctx }) => ctx.userId,
+  songs: { /* … */ },
+})
+```

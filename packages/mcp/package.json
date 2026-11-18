@@ -1,0 +1,53 @@
+{
+  "name": "@onedef/mcp",
+  "version": "0.2.0",
+  "description": "MCP for a onedef contract: tools over Streamable HTTP or stdio, an MCP App, and the in-iframe app client.",
+  "license": "MIT",
+  "homepage": "https://onedef.cahidarda.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CahidArda/onedef.git",
+    "directory": "packages/mcp"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./app": {
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js",
+      "default": "./dist/app.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "onedef": "workspace:*"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/server": "^2"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/server": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/server": "^2",
+    "zod": "^4.2.0",
+    "@modelcontextprotocol/client": "^2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

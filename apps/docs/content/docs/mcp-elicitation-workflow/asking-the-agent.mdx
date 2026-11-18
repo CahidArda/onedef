@@ -1,0 +1,78 @@
+---
+title: Ask the agent
+description: ctx.elicitAgentInput hands a piece of work to the connected model, and checks its answer against your schema.
+---
+
+Some questions aren't for the user. They're work for the model the user is talking to:
+write this section, translate these lines. `ctx.elicitAgentInput` hands that work to the
+agent driving the run. Your server needs no model and no API key.
+
+Turn it on with `agentInput: true`. Without it (the default), `ctx.elicitAgentInput` doesn't
+exist, so calling it is a type error, and the workflow registers as a single tool.
+
+```ts
+import { createWorkflow } from '@onedef/mcp-elicitation-workflow'
+import { z } from 'zod'
+
+const Outline = z.object({ sections: z.array(z.string()).min(2) })
+
+export const writeGuide = createWorkflow({
+  id: 'write-guide',
+  input: z.object({ topic: z.string() }),
+  agentInput: true,
+}).handler(async (ctx) => {
+  const outline = await ctx.elicitAgentInput('outline', {
+    schema: Outline,
+    instructions: 'Propose section titles for a guide on this topic.',
+    data: { topic: ctx.input.topic },
+  })
+
+  return ctx.step('save', () => saveOutline(outline))
+})
+```
+
+The agent's answer is typed: `outline.sections` is a `string[]`.
+
+## How the agent drives it
+
+<Diagram name="agent-loop" alt="The server sends the agent the next question, and the agent sends back the answer, until the run is done." />
+
+Registered as `write_guide`, a workflow with `agentInput: true` also gets a
+`write_guide_next` tool. The agent:
+
+1. calls `write_guide({ topic })`, and gets back the run's id and the question
+   (`waitingFor`: the instructions, the data and the schema);
+2. does the work and sends it with `write_guide_next({ runId, payload })`;
+3. repeats until `status` is `done`, with the result in `output`.
+
+The tool descriptions explain this, so the agent needs no extra prompt.
+
+## Wrong answers
+
+`schema` can be zod (4.2+), valibot or arktype. The agent sees it as JSON Schema. An
+answer that doesn't match is rejected with the reason:
+
+```
+INVALID_INPUT: Answer to "outline" rejected, the run did not move: sections: Too small: expected array to have >=2 items.
+```
+
+The run stays at the same question, so the agent can fix its answer and send it again.
+
+## Several questions
+
+Each question is one round trip. Send shared context (the source document, the rules) once,
+in the first question's `data`. Later questions can assume the agent has it:
+
+```ts
+for (const title of outline.sections) {
+  const section = await ctx.elicitAgentInput(`section-${title}`, {
+    schema: z.object({ body: z.string() }),
+    instructions: 'Write this section.',
+    data: { title },
+  })
+  sections.push(section.body)
+}
+```
+
+A workflow can ask the agent and the user in the same run. For example, the agent writes the
+guide, then `ctx.elicitHumanInput` asks the user to confirm before it's published.

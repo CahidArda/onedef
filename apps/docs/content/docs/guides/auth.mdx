@@ -1,0 +1,95 @@
+---
+title: Auth
+description: Declare auth once. The CLI logs in, MCP clients sign in with OAuth, and handlers see who is calling.
+---
+
+```ts title="lib/contract.ts"
+export const config = defineConfig({
+  name: 'acme',
+  auth: {
+    apiKey: { env: 'ACME_API_KEY', url: 'https://acme.dev/settings/keys' },
+    oauth: { scopes: ['profile', 'email'] },
+  },
+})
+```
+
+That one declaration drives every surface:
+
+| surface | what it does |
+| --- | --- |
+| CLI | `acme login` (OAuth in the browser), `acme login --with-token` (API key), `ACME_API_KEY=…` in CI |
+| MCP | answers `401` with the OAuth discovery header, so Claude and ChatGPT open your sign-in page |
+| clients | `rpc({ url, auth: () => ({ bearer: token }) })` sends the right header |
+| backend | `context()` sees the request and the parsed credentials |
+
+## Who is calling
+
+`context()` runs once per request. Verify the caller there, and every handler gets the
+result as `ctx`:
+
+```ts
+export const backend = implement(contract, {
+  context: async ({ request }) => {
+    const user = await verifyUser(request)          // your identity provider
+    if (!user) fail('UNAUTHORIZED', 'Sign in first.')
+    return { userId: user.id }
+  },
+  songs: {
+    create: ({ input, ctx }) => db.songs.create(input, ctx.userId),
+    // …
+  },
+})
+```
+
+## OAuth for MCP clients
+
+MCP clients sign in with OAuth 2.1. Your identity provider is the authorization server, and
+`/mcp` is the protected resource:
+
+```ts title="app/mcp/route.ts"
+const handler = createMcpHandler(backend, {
+  auth: {
+    verify: async (request) => Boolean(await verifyOAuthToken(request)),
+    resourceMetadataUrl: (request) => `${new URL(request.url).origin}/.well-known/oauth-protected-resource/mcp`,
+  },
+})
+```
+
+```ts title="app/.well-known/oauth-protected-resource/mcp/route.ts"
+import { protectedResourceMetadata } from '@onedef/mcp'
+
+export const GET = protectedResourceMetadata({
+  resource: (request) => `${new URL(request.url).origin}/mcp`,
+  authorizationServers: ['https://your-auth-server.example.com'],
+  scopes: ['profile', 'email'],
+})
+```
+
+A call without a valid token gets `401` and a `WWW-Authenticate` header pointing at that
+metadata. The client then discovers the authorization server, registers, and sends the user
+to sign in.
+
+**Clerk, Auth0, WorkOS, Better Auth** and other providers that support OAuth for MCP
+clients plug into `verify`. With Clerk, one `authenticateRequest` call accepts both the
+website's session and an MCP client's OAuth token. Turn on "Publish CIMD support" in its
+dashboard, so MCP clients register without a manual step.
+
+[Misrava](https://github.com/CahidArda/misrava) puts every page and endpoint behind Clerk
+this way: the website, `/api`, `/docs` and `/mcp`.
+
+## Restricting fields by credential
+
+Some fields should only reach some callers, for example tokens that only API-key callers
+may see. Declare credential `modes`, then mark fields:
+
+```ts
+defineConfig({ name: 'acme', modes: ['apikey', 'oauth'] })
+
+collection(config, {
+  // …
+  restrict: { rest_token: ['apikey'] },   // OAuth callers never see rest_token
+})
+```
+
+`forMode(backend, 'oauth')` is the backend as an OAuth caller sees it: restricted fields are
+stripped from schemas and values, and operations the mode can't call are gone.

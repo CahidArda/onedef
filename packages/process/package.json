@@ -1,0 +1,42 @@
+{
+  "name": "@onedef/process",
+  "version": "0.2.0",
+  "description": "The engine behind onedef processes (mutations marked `process: true`), on @onedef/mcp-elicitation-workflow: runs replayed by TanStack Workflow, kept in any key-value store; ApiErrors keep their codes.",
+  "license": "MIT",
+  "homepage": "https://onedef.cahidarda.com/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CahidArda/onedef.git",
+    "directory": "packages/process"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@standard-schema/spec": "^1.0.0",
+    "@tanstack/workflow-core": "0.0.5",
+    "onedef": "workspace:*",
+    "@onedef/mcp-elicitation-workflow": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "zod": "^4.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

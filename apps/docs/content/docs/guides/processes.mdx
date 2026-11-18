@@ -1,0 +1,133 @@
+---
+title: Processes
+description: Long-running mutations the connected agent works through step by step, without your server needing a model.
+---
+
+Some work is a sequence of model calls: translate a song in parts, then assemble it. A
+**process** lets the agent connected over MCP do that work itself, one step at a time,
+while your server keeps track of where the run is. Your server needs no model and no API
+key for it.
+
+## Declare it
+
+A process is a mutation (or an action) with `process: true`:
+
+```ts title="lib/contract.ts"
+translate: action({ summary: 'Translate the song', needs: 'object', output: Song, process: true }),
+```
+
+## Write the handler
+
+The handler gets the usual arguments plus two tools:
+
+- `step(name, fn)` runs `fn` once and records its result.
+- `elicitAgentInput(name, { schema, instructions, data })` asks the agent to do a piece of
+  work. It pauses the run until the agent sends an answer that matches `schema`.
+
+```ts title="lib/backend.ts"
+import { implement } from 'onedef'
+import { runsIn } from '@onedef/process'
+import { fsStore } from '@onedef/store/fs'
+
+export const backend = implement(contract, {
+  songs: {
+    translate: async ({ object, step, elicitAgentInput }) => {
+      const lines = await step('lines', () => splitIntoParts(object.lyrics))   // runs once
+
+      const parts = []
+      for (const [i, part] of lines.entries()) {
+        parts.push(
+          await elicitAgentInput(`part-${i + 1}`, {
+            schema: Part,
+            instructions: 'Translate these lines into English. Answer with the JSON `schema` describes.',
+            data: i === 0 ? { song: object.lyrics, lines: part } : { lines: part },   // context once
+          }),
+        )
+      }
+
+      return step('save', () => save(object, parts))
+    },
+  },
+}, { runStore: runsIn(fsStore('.data')) })   // where paused runs wait; see below
+```
+
+## What the agent sees
+
+The one flag gives every surface two more operations:
+
+| op | MCP tool | what it does |
+| --- | --- | --- |
+| `songs.translateStart` | `songs_translate_start` | starts a run: returns its `runId` and the first question |
+| `songs.translateNext` | `songs_translate_next` | `{ runId, payload }`: the answer to the current question |
+
+A run goes like this:
+
+1. The agent calls `songs_translate_start({ slug })` and gets
+   `{ runId, status: 'waiting', waitingFor }`. `waitingFor` carries the `instructions`, the
+   `data`, and the JSON Schema of the answer.
+2. The agent does the work and sends it to `songs_translate_next({ runId, payload })`.
+3. An answer that doesn't match the schema is rejected with the reason, and the run stays
+   at the same question. An accepted one moves the run to the next question.
+4. When the handler returns, `status` is `done` and `output` is the result.
+
+The tool descriptions explain this protocol, so the agent needs no extra prompt.
+
+## How it works
+
+Processes run on [TanStack Workflow](https://tanstack.com/workflow), through
+[`@onedef/mcp-elicitation-workflow`](/docs/mcp-elicitation-workflow). Every call replays the handler
+from the top. Finished `step`s return their recorded result instead of running again, and
+answered questions return their answers. So no server keeps a run in memory, and a run
+survives restarts and serverless instances.
+
+Two rules follow:
+
+- **Keep the handler deterministic between steps.** Side effects, the clock, randomness and
+  I/O go inside `step`.
+- **Code outside steps runs on every call.** That's the right place for an auth check, and
+  the wrong place for a model call.
+
+An `ApiError` thrown inside a step reaches the caller with its code intact.
+
+## Calling the mutation directly: headless runs
+
+The mutation itself is still there: `songs.translate`, or `songs_translate` over MCP, or
+`POST /songs/{slug}/translate`. Calling it runs the process **end to end in one call**,
+with nobody to answer questions. That's a **headless** run.
+
+In a headless run, `elicitAgentInput` can't wait for anyone, so it fails the run with
+"Nobody can answer …". If the process should also work when it's called directly, say
+from a button on your website, check `headless` and do that step another way, such as
+calling your own model:
+
+```ts
+translate: async ({ object, step, elicitAgentInput, headless }) => {
+  // …
+  const part = headless
+    ? await step(`part-${i + 1}`, () => myModel.translate(lines))       // called directly: your model
+    : await elicitAgentInput(`part-${i + 1}`, { schema: Part, data })   // the agent does it
+  // …
+}
+```
+
+| called as | `headless` | who does the work |
+| --- | --- | --- |
+| `songs.translateStart` / `songs.translateNext` | `false` | the agent, one question at a time |
+| `songs.translate` | `true` | your code, in one call; returns the output |
+
+## Where runs live
+
+`implement` takes one `runStore`. It is required exactly when the contract has a process,
+and leaving it out is a type error.
+
+```ts
+import { runsIn, memoryRunStore } from '@onedef/process'
+import { fsStore } from '@onedef/store/fs'
+import { redisStore } from '@onedef/store/redis'
+
+runsIn(fsStore('.data'))         // local: files under .data/_runs
+runsIn(redisStore(redis))        // serverless: Upstash Redis
+memoryRunStore()                 // tests
+```
+
+`implementStore` keeps runs in its own store automatically.

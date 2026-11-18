@@ -1,0 +1,84 @@
+# Deploys the docs site (apps/docs) to Vercel from GitHub Actions rather than
+# through Vercel's Git integration: the Vercel account that owns the project is
+# not the one this GitHub account is linked to, so Vercel can't watch the repo.
+# The build runs here (`vercel build`) and only the output is uploaded
+# (`vercel deploy --prebuilt`).
+#
+# Pull requests get a preview deployment whose URL is posted on the PR;
+# pushes to main deploy to production.
+name: Deploy docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  VERCEL_ORG_ID: team_25m8VH3L7WlQwpzOaU6BxJvN
+  VERCEL_PROJECT_ID: prj_AZXJMG3QAP8qjVyEas2dCqN4DGjd
+  DEPLOY_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+  PROD_FLAG: ${{ github.event_name == 'pull_request' && ' ' || '--prod' }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Fork PRs get no secrets, so there is no token to deploy with.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    environment:
+      name: ${{ github.event_name == 'pull_request' && 'docs-preview' || 'docs-production' }}
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: npm install --global vercel@65
+
+      - name: Pull project settings
+        run: vercel pull --yes --environment="$DEPLOY_ENV" --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build $PROD_FLAG --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt $PROD_FLAG --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed to $url" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Comment the preview URL on the PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const marker = '<!-- vercel-preview:docs -->'
+            const sha = context.payload.pull_request.head.sha.slice(0, 7)
+            const body = `${marker}\n**Docs preview:** ${process.env.URL}\n\nBuilt from ${sha}.`
+            const { owner, repo } = context.repo
+            const issue_number = context.issue.number
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number })
+            const existing = comments.find((c) => c.body?.includes(marker))
+            if (existing) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body })
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body })

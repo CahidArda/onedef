@@ -1,0 +1,187 @@
+---
+title: MCP elicitation workflow
+description: MCP tools that stop to ask the user or the agent, and continue exactly where they stopped. For any MCP SDK server, with or without onedef.
+---
+
+`@onedef/mcp-elicitation-workflow` lets an MCP tool stop for an answer and then **continue
+where it stopped, without running anything twice**. It works on any
+[MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) server.
+
+It comes from [onedef](/docs), a framework for defining an API once and serving it as REST,
+MCP and more, but it's a standalone package: your server doesn't have to use onedef.
+
+A tool can ask two kinds of questions:
+
+- **the user**: approve a deploy, fill in a form. The client shows its own elicitation UI.
+- **the agent**: do a piece of the work, such as write a section, and answer in a schema
+  you define.
+
+## The problem
+
+With MCP elicitation, a tool that asks the user returns `input_required`. The client shows
+the form, then **calls the tool again** with the answer. So everything before the question
+runs twice:
+
+```ts
+import { acceptedContent, inputRequired } from '@modelcontextprotocol/server'
+
+server.registerTool('deploy', config, async (args, ctx) => {
+  const build = await buildApp()   // runs on both calls
+
+  const answer = acceptedContent(ctx.mcpReq.inputResponses, 'confirm')
+  if (!answer) {
+    return inputRequired({
+      inputRequests: {
+        confirm: inputRequired.elicit({ message: `Deploy ${build.id}?`, requestedSchema: confirmForm }),
+      },
+    })
+  }
+
+  return ship(build)               // ships the second build
+})
+```
+
+We ran this in Claude Code, with a hook answering "yes":
+
+```
+BUILD build-1
+USER  approve build-1
+BUILD build-2          ← the build runs again
+SHIP  build-2          ← not the build the user approved
+```
+
+## The fix
+
+Write the tool as a workflow. Work before a question goes in a `step`, which runs once:
+
+```ts title="deploy.ts"
+import { createWorkflow } from '@onedef/mcp-elicitation-workflow'
+
+export const deploy = createWorkflow({ id: 'deploy' }).handler(async (ctx) => {
+  const build = await ctx.step('build', () => buildApp())
+
+  const answer = await ctx.elicitHumanInput({
+    message: `Deploy ${build.id}?`,
+    requestedSchema: confirmForm,
+  })
+  if (answer.action !== 'accept') return 'cancelled'
+
+  return ctx.step('ship', () => ship(build))
+})
+```
+
+Then register it the way you register a tool:
+
+```ts title="server.ts"
+import { memoryRunStore } from '@onedef/mcp-elicitation-workflow'
+import { registerWorkflowTool } from '@onedef/mcp-elicitation-workflow/mcp'
+import { deploy } from './deploy'
+
+registerWorkflowTool(server, 'deploy', { runStore: memoryRunStore() }, deploy)
+```
+
+The same run in Claude Code:
+
+```
+BUILD build-1
+USER  approve build-1
+SHIP  build-1          ← the build the user approved
+```
+
+The client still calls the tool twice. The second call carries the run's id, so the run
+picks up where it was: `build` returns its recorded result instead of running again, and
+the user's answer goes to the question that was waiting. Side by side:
+
+<Diagram name="elicitation-replay" alt="Two columns, call 1 and call 2. Plain elicitation: call 1 builds build-1 and asks the user; after the user approves, call 2 builds build-2 and ships it. Workflow: call 1 builds build-1 and records it; call 2 takes build-1 from the log and ships it." />
+
+## Ask the agent, too
+
+A question can also go to the agent the user is talking to. `ctx.elicitAgentInput` hands it
+a piece of work, such as writing a section, and checks the answer against your schema. A
+workflow that asks the agent turns it on with `agentInput: true`:
+
+```ts
+const writeGuide = createWorkflow({ id: 'write-guide', input, agentInput: true }).handler(async (ctx) => {
+  const outline = await ctx.elicitAgentInput('outline', {
+    schema: z.object({ sections: z.array(z.string()) }),
+    instructions: 'Propose section titles for a guide on this topic.',
+    data: { topic: ctx.input.topic },
+  })
+  // …
+})
+```
+
+The agent gets the instructions and the schema, does the work, and sends the answer back.
+
+- **No LLM key in your app.** The connected agent does the model work, so your server
+  needs no model, no API key and no model bill.
+- **The user's own model.** The work runs on whatever model the user is already talking to,
+  with the context of their conversation.
+- **Checked answers.** A wrong answer is rejected with the reason, and the run waits for a
+  fixed one.
+
+[More on asking the agent →](/docs/mcp-elicitation-workflow/asking-the-agent)
+
+## Install
+
+```bash
+pnpm add @onedef/mcp-elicitation-workflow @modelcontextprotocol/server zod
+```
+
+## What you get
+
+- **Nothing runs twice.** Work before a question is a recorded step.
+- **Native forms.** The user sees the client's own elicitation UI.
+- **The agent can do the work.** `ctx.elicitAgentInput` hands a step to the connected model
+  and checks its answer against your schema.
+- **Durable runs.** A run waits in a store (memory, files, Redis), not in a process, so it
+  survives restarts and serverless instances.
+
+## Built on TanStack Workflow
+
+`createWorkflow` and `ctx.step` come from [TanStack Workflow](https://tanstack.com/workflow),
+re-exported, so you don't install it yourself. It works by **replay**: a run keeps a log of
+finished steps, and each call runs the function again from the top, taking finished steps
+from the log. That is exactly what MCP elicitation needs, since the client calls the tool
+again anyway. Keep code between steps deterministic, so a replay takes the same path.
+
+We picked it because it needs no service (no workflow server, queue or callback URL) and no
+compiler (workflows are plain async functions), so it runs wherever your MCP server runs,
+serverless included. Runs go to a store you choose.
+
+## Registering a workflow tool
+
+`registerWorkflowTool` takes the same config as `server.registerTool` (`title`,
+`description`, `inputSchema`, `annotations`), plus `runStore`, where runs wait between
+calls. `description` and `inputSchema` default to the workflow's own.
+
+A workflow that only asks the user is **one tool**, like any other. A workflow with
+`agentInput: true` is **two**, one for each kind of question:
+
+| tool | input | answers questions for |
+| --- | --- | --- |
+| `deploy` | the workflow's input | **the user.** This is MCP's own elicitation: when the run asks the user, the client shows the form and calls `deploy` again with the answer, and that call continues the same run. |
+| `deploy_next` | `{ runId, payload? }` | **the agent.** This is new, added by this package: MCP has no way for a tool to ask the agent for work, so the agent sends its answer to `ctx.elicitAgentInput` here. Without `payload`, it returns where the run is. |
+
+Both return the run's state: `runId`, `status` (`waiting`, `done` or `failed`), and either
+the open question (`waitingFor`) or the result (`output`). The tool descriptions explain
+this to the agent, so it needs no extra prompt.
+
+<Cards>
+  <Card title="Ask the user" href="/docs/mcp-elicitation-workflow/asking-a-human">
+    `ctx.elicitHumanInput`: a form in the client's own UI.
+  </Card>
+  <Card title="Ask the agent" href="/docs/mcp-elicitation-workflow/asking-the-agent">
+    `ctx.elicitAgentInput`: let the model do a step, checked against a schema.
+  </Card>
+  <Card title="Run stores" href="/docs/mcp-elicitation-workflow/run-stores">
+    Memory for tests, files locally, Redis on serverless.
+  </Card>
+  <Card title="Without MCP" href="/docs/mcp-elicitation-workflow/without-mcp">
+    Drive runs from a web form, a Slack button or a test.
+  </Card>
+</Cards>
+
+A complete server with tests and an eval is in
+[`examples/mcp-workflow`](https://github.com/CahidArda/onedef/tree/main/examples/mcp-workflow),
+including the comparison above as one script.

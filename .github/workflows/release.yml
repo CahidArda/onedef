@@ -1,0 +1,46 @@
+# Publishes onedef and @onedef/* to npm with Changesets.
+#
+# On every push to main, changesets/action either opens (or updates) a
+# "Version packages" PR that applies the pending .changeset/*.md files, or, when
+# that PR has just been merged and there is nothing left to version, publishes.
+#
+# There is no npm token: every package trusts this workflow file through npm
+# trusted publishing (OIDC), so the job only needs `id-token: write` and an npm
+# new enough to speak OIDC (11.5.1+, which Node 24 ships). If this file is
+# renamed, or a new package is added, set up the trusted publisher for it:
+#   npm trust github <package> --repo CahidArda/onedef --file release.yml --allow-publish
+# (npm 12+; a brand-new package has to be published once by hand first).
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: release-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+
+      - uses: changesets/action@v1
+        with:
+          version: pnpm version-packages
+          publish: pnpm release
+          title: Version packages
+          commit: Version packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

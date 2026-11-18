@@ -1,0 +1,70 @@
+---
+title: MCP server
+description: Every operation becomes an MCP tool that Claude, ChatGPT and Cursor can call. One route file.
+---
+
+```ts title="app/mcp/route.ts"
+import { createMcpHandler } from '@onedef/mcp'
+import { backend } from '@/lib/backend'
+
+const handler = createMcpHandler(backend)   // (request: Request) => Promise<Response>
+export { handler as GET, handler as POST, handler as DELETE }
+```
+
+That's an MCP server over Streamable HTTP at `/mcp`, with one tool per operation:
+
+| op | tool | annotations |
+| --- | --- | --- |
+| `songs.list` | `songs_list` | `readOnlyHint` (a query) |
+| `songs.rename` | `songs_rename` | — |
+| `songs.delete` | `songs_delete` | `destructiveHint` |
+
+Each tool's title, description and input schema come from the contract, so the agent knows
+what it does and what to send. Results come back as structured content matching your
+output schema. Errors come back as tool errors the agent can read and act on.
+
+## Connect a client
+
+```bash
+claude mcp add --transport http myapp https://myapp.com/mcp
+```
+
+In Claude.ai or ChatGPT, add it as a custom connector with the same URL.
+
+## Run handlers here, or forward
+
+```ts
+createMcpHandler(backend)                                          // runs the handlers in process
+createMcpHandler(contract, { transport: rpc({ url: API_URL }) })   // forwards to a deployed backend
+```
+
+The second form is an MCP server with no handler code at all: it calls your API like any
+other client. Use it to put an MCP server in front of an API that runs elsewhere, or one
+you only [describe](/docs/guides/existing-api).
+
+## Local, over stdio
+
+```ts
+import { serveMcpStdio } from '@onedef/mcp'
+
+await serveMcpStdio(contract, { transport: rpc({ url: API_URL }) })
+```
+
+Credentials come from the environment variable your `auth` config names, so
+`ACME_API_KEY=… npx acme-mcp` just works.
+
+## Sign-in
+
+`auth` makes `/mcp` require an OAuth token. Without one it answers `401` with the discovery
+header, and clients like Claude open your sign-in page. See [Auth](/docs/guides/auth).
+
+```ts
+createMcpHandler(backend, {
+  auth: { verify: async (request) => isValidToken(request), resourceMetadataUrl },
+})
+```
+
+## Show a UI
+
+Pass `app`, and the tool calls you choose open your own UI inside the conversation. See
+[MCP Apps](/docs/surfaces/mcp-apps).

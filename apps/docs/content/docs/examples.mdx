@@ -1,0 +1,23 @@
+---
+title: Examples
+description: Complete projects in the repository, from a five-minute API to a full app.
+---
+
+| example | what it shows |
+| --- | --- |
+| [`examples/quickstart`](https://github.com/CahidArda/onedef/tree/main/examples/quickstart) | The [quick start](/docs/quickstart): a notes API in Next.js with REST, OpenAPI and MCP. |
+| [`examples/basic`](https://github.com/CahidArda/onedef/tree/main/examples/basic) | Every surface from one contract: a React app with `/api` and `/mcp`, a CLI with login, a stdio MCP server, a published SDK and a Mintlify docs site. Runs offline. |
+| [`examples/upstash`](https://github.com/CahidArda/onedef/tree/main/examples/upstash) | [Describing an existing API](/docs/guides/existing-api): part of the Upstash API, called directly, with one operation implemented locally. |
+| [`examples/mcp-workflow`](https://github.com/CahidArda/onedef/tree/main/examples/mcp-workflow) | The [elicitation workflow](/docs/mcp-elicitation-workflow) on a plain MCP SDK server. An agent writes a guide, the user approves a deploy and fills in a release form. It has a scripted test, an [eve](https://www.npmjs.com/package/eve) eval CI runs, and a script that compares it with plain MCP elicitation through Claude Code. |
+
+## A full app: Misrava
+
+[Misrava](https://github.com/CahidArda/misrava) teaches French songs line by line. It's built
+on onedef end to end:
+
+- **The contract:** songs and concepts as collections, the lesson pipeline as actions.
+- **One UI:** the website, and the same screens rendered inside Claude as an MCP App.
+- **Auth:** every page and endpoint behind Clerk; MCP clients sign in with OAuth (CIMD).
+- **A process:** the connected agent can write a lesson itself, part by part, with
+  `songs_translate_start` / `_next`. The website's button runs the same process with
+  OpenAI.

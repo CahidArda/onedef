@@ -1,0 +1,30 @@
+{
+  "name": "onedef-repo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r --filter \"./packages/*\" build",
+    "typecheck": "pnpm -r --filter \"./packages/*\" typecheck",
+    "check:publish": "pnpm -r --filter \"./packages/*\" exec publint",
+    "test": "pnpm -r --filter \"./packages/*\" test",
+    "format": "prettier --write packages/*/src packages/*/test",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
+    "@example/cli": "workspace:*",
+    "@types/node": "^26.2.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "prettier": "^3.6.0",
+    "publint": "^0.3.24",
+    "tsdown": "^0.9.9",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.0"
+  },
+  "packageManager": "pnpm@9.12.0"
+}
