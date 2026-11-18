@@ -76,19 +76,7 @@ onedef makes them one thing:
 
 ## How it fits together
 
-```
-          contract.ts                       one value: schemas + summaries, no server code
-              │
-   ┌──────────┴─────────────┐
-   │                        │
-backend.ts            every client surface
-implement(contract,   createClient(contract, transport)
-  handlers)            runCli(contract, …)
-   │                   createQueryUtils(contract, client)
-   │
-   ├── toNextHandlers(backend)     REST + RPC + /openapi.json
-   └── createMcpHandler(backend)   MCP tools (+ MCP App)
-```
+<Diagram name="fits-together" alt="contract.ts holds the schemas and summaries and no server code. It feeds backend.ts, where implement(contract, handlers) attaches the handlers; toNextHandlers(backend) serves REST, RPC and OpenAPI, and createMcpHandler(backend) serves MCP tools and the MCP App. It also feeds the clients: createClient, runCli and createQueryUtils. A client reaches the backend through a transport: rpc(), local(), mcpApp() or http()." />
 
 A **transport** decides who answers a call: `rpc()` over HTTP, `local()` in process,
 `mcpApp()` through the MCP host, or `http()` against an existing REST API. The same client

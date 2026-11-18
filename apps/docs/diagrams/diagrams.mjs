@@ -69,6 +69,37 @@ export const diagrams = {
     text(280, 130, 'until the run is done', 16, { strokeColor: '#868e96' }),
   ],
 
+  // index, "How it fits together": the contract, the server side, the clients, and the
+  // transport that connects a client to whoever answers.
+  'fits-together': [
+    box(300, 0, 300, 70, 'contract.ts', blue),
+    text(620, 12, 'schemas + summaries\nno server code', 16, { strokeColor: '#868e96' }),
+    arrow(400, 76, 200, 164),
+    arrow(500, 76, 720, 164),
+    box(30, 170, 340, 80, 'backend.ts\nimplement(contract, handlers)', violet, {
+      label: { text: 'backend.ts\nimplement(contract, handlers)', fontSize: 18 },
+    }),
+    box(560, 170, 330, 120, 'clients', green, {
+      label: {
+        text: 'createClient(contract, transport)\nrunCli(contract, …)\ncreateQueryUtils(contract, client)',
+        fontSize: 16,
+      },
+    }),
+    arrow(554, 230, 376, 230, {
+      strokeStyle: 'dashed',
+      label: { text: 'transport', fontSize: 16 },
+    }),
+    text(380, 300, 'rpc() · local() · mcpApp() · http()', 16, { strokeColor: '#868e96' }),
+    arrow(130, 256, 80, 364),
+    arrow(270, 256, 330, 364),
+    box(-60, 370, 270, 80, 'toNextHandlers(backend)', 'transparent', {
+      label: { text: 'toNextHandlers(backend)\nREST + RPC + OpenAPI', fontSize: 16 },
+    }),
+    box(230, 370, 270, 80, 'createMcpHandler(backend)', 'transparent', {
+      label: { text: 'createMcpHandler(backend)\nMCP tools + MCP App', fontSize: 16 },
+    }),
+  ],
+
   // index: one contract, every surface.
   'one-contract': [
     box(190, 0, 260, 70, 'contract + handlers', blue),
