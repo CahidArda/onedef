@@ -72,30 +72,36 @@ export const diagrams = {
   // index, "How it fits together": the contract, the server side, the clients, and the
   // transport that connects a client to whoever answers.
   'fits-together': [
-    box(300, 0, 300, 70, 'contract.ts', blue),
-    text(620, 12, 'schemas + summaries\nno server code', 16, { strokeColor: '#868e96' }),
-    arrow(400, 76, 200, 164),
-    arrow(500, 76, 720, 164),
-    box(30, 170, 340, 80, 'backend.ts\nimplement(contract, handlers)', violet, {
-      label: { text: 'backend.ts\nimplement(contract, handlers)', fontSize: 18 },
+    // a symmetric grid: contract centred at x=480, backend centred at 160, clients at 800
+    box(330, 0, 300, 80, 'contract.ts', blue, {
+      label: { text: 'contract.ts\nschemas + summaries, no server code', fontSize: 16 },
     }),
-    box(560, 170, 330, 120, 'clients', green, {
+    arrow(430, 86, 160, 164),
+    arrow(530, 86, 800, 164),
+    box(0, 170, 320, 100, 'backend', violet, {
+      label: { text: 'backend.ts\nimplement(contract, handlers)', fontSize: 16 },
+    }),
+    box(640, 170, 320, 100, 'clients', green, {
       label: {
         text: 'createClient(contract, transport)\nrunCli(contract, …)\ncreateQueryUtils(contract, client)',
         fontSize: 16,
       },
     }),
-    arrow(554, 230, 376, 230, {
+    arrow(634, 220, 326, 220, {
       strokeStyle: 'dashed',
       label: { text: 'transport', fontSize: 16 },
     }),
-    text(380, 300, 'rpc() · local() · mcpApp() · http()', 16, { strokeColor: '#868e96' }),
-    arrow(130, 256, 80, 364),
-    arrow(270, 256, 330, 364),
-    box(-60, 370, 270, 80, 'toNextHandlers(backend)', 'transparent', {
+    // an invisible box only to centre the line under the arrow
+    box(330, 236, 300, 30, '', 'transparent', {
+      strokeColor: 'transparent',
+      label: { text: 'rpc() · local() · mcpApp() · http()', fontSize: 14, strokeColor: '#868e96' },
+    }),
+    arrow(110, 276, 10, 364),
+    arrow(210, 276, 310, 364),
+    box(-130, 370, 280, 80, 'rest', 'transparent', {
       label: { text: 'toNextHandlers(backend)\nREST + RPC + OpenAPI', fontSize: 16 },
     }),
-    box(230, 370, 270, 80, 'createMcpHandler(backend)', 'transparent', {
+    box(170, 370, 280, 80, 'mcp', 'transparent', {
       label: { text: 'createMcpHandler(backend)\nMCP tools + MCP App', fontSize: 16 },
     }),
   ],
