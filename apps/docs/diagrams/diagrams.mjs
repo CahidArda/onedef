@@ -45,11 +45,21 @@ function text(x, y, value, fontSize = 20, extra = {}) {
   return { type: 'text', x, y, text: value, fontSize, ...extra };
 }
 
+// Text centred in a box with no outline: box labels are centred, free text is placed by
+// its left edge, and guessing a hand-drawn font's width puts it off-centre.
+function caption(x, y, width, value, fontSize = 16, color) {
+  return box(x, y, width, fontSize + 14, '', 'transparent', {
+    strokeColor: 'transparent',
+    label: { text: value, fontSize, ...(color ? { strokeColor: color } : {}) },
+  });
+}
+
 export const diagrams = {
   // mcp-elicitation-workflow/index: plain elicitation builds twice; the workflow once.
   'elicitation-replay': [
-    text(110, 0, 'call 1', 22, { strokeColor: '#868e96' }),
-    text(590, 0, 'call 2', 22, { strokeColor: '#868e96' }),
+    // two columns, 280 wide, at x=0 and x=480
+    caption(0, 0, 280, 'call 1', 22, '#868e96'),
+    caption(480, 0, 280, 'call 2', 22, '#868e96'),
     text(0, 50, 'Plain MCP elicitation', 24),
     box(0, 95, 280, 80, 'build build-1\nask the user', grey),
     arrow(290, 135, 470, 135, { label: { text: 'user approves', fontSize: 16 } }),
@@ -62,11 +72,12 @@ export const diagrams = {
 
   // mcp-elicitation-workflow/asking-the-agent: the start / next loop.
   'agent-loop': [
-    box(0, 40, 180, 80, 'Agent', blue),
+    // two equal boxes, 220 wide, at x=0 and x=520; the gap between them is 300
+    box(0, 40, 220, 80, 'Agent', blue),
     box(520, 40, 220, 80, 'Your MCP server', violet),
-    arrow(186, 60, 514, 60, { label: { text: 'the answer', fontSize: 18 } }),
-    arrow(514, 100, 186, 100, { label: { text: 'the next question', fontSize: 18 } }),
-    text(280, 130, 'until the run is done', 16, { strokeColor: '#868e96' }),
+    arrow(226, 60, 514, 60, { label: { text: 'the answer', fontSize: 18 } }),
+    arrow(514, 100, 226, 100, { label: { text: 'the next question', fontSize: 18 } }),
+    caption(220, 130, 300, 'until the run is done', 16, '#868e96'),
   ],
 
   // index, "How it fits together": the contract, the server side, the clients, and the
@@ -91,11 +102,7 @@ export const diagrams = {
       strokeStyle: 'dashed',
       label: { text: 'transport', fontSize: 16 },
     }),
-    // an invisible box only to centre the line under the arrow
-    box(330, 236, 300, 30, '', 'transparent', {
-      strokeColor: 'transparent',
-      label: { text: 'rpc() · local() · mcpApp() · http()', fontSize: 14, strokeColor: '#868e96' },
-    }),
+    caption(330, 236, 300, 'rpc() · local() · mcpApp() · http()', 14, '#868e96'),
     arrow(110, 276, 10, 364),
     arrow(210, 276, 310, 364),
     box(-130, 370, 280, 80, 'rest', 'transparent', {
@@ -108,10 +115,11 @@ export const diagrams = {
 
   // index: one contract, every surface.
   'one-contract': [
-    box(190, 0, 260, 70, 'contract + handlers', blue),
+    // three 200-wide boxes 230 apart (centres 100, 330, 560); the contract is centred on 330
+    box(200, 0, 260, 70, 'contract + handlers', blue),
     ...['REST + OpenAPI\ntyped client', 'MCP server\nMCP App', 'CLI\nTanStack Query'].flatMap((label, i) => {
       const x = i * 230;
-      return [box(x, 170, 200, 80, label, 'transparent'), arrow(320, 76, x + 100, 164)];
+      return [box(x, 170, 200, 80, label, 'transparent'), arrow(330, 76, x + 100, 164)];
     }),
   ],
 };
