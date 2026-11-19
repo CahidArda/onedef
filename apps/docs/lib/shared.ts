@@ -1,6 +1,8 @@
 import { createGetUrl } from 'fumadocs-core/source';
 
 export const appName = 'onedef';
+/** The name search engines and link previews show for the site. */
+export const siteName = 'OneDef';
 
 /** Where the site is served; Open Graph and Twitter need absolute image URLs. */
 export const siteUrl = new URL(
