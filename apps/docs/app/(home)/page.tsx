@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ServerCodeBlock } from 'fumadocs-ui/components/codeblock.rsc';
+import { siteName, siteUrl } from '@/lib/shared';
 
 const contract = `export const notes = collection(config, {
   name: 'notes',
@@ -54,9 +55,22 @@ const reasons: { title: string; body: string }[] = [
   },
 ];
 
+// Tells Google the site's name, so results show "OneDef" rather than the parent domain.
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteName,
+  alternateName: ['onedef'],
+  url: siteUrl.href,
+};
+
 export default function HomePage() {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-24 sm:px-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
       {/* Hero: what it is, in one sentence */}
       <section className="pt-16 pb-12 text-center sm:pt-24">
         <p className="mb-4 text-sm font-medium text-fd-muted-foreground">TypeScript · Next.js · MCP</p>
