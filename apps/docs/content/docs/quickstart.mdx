@@ -10,7 +10,9 @@ You'll build a small notes API and get, without writing any of it by hand:
 - a typed client for your pages.
 
 The finished code is [`examples/quickstart`](https://github.com/CahidArda/onedef/tree/main/examples/quickstart)
-in the repository.
+in the repository. To run it instead of building it, from a clone:
+`pnpm install && pnpm build`, then `pnpm --filter @example/quickstart dev`. The other
+[examples](/docs/examples) go further: a CLI, an SDK, an existing API.
 
 <Steps>
 
@@ -188,16 +190,16 @@ stops compiling until it's fixed.
 ## Next
 
 <Cards>
-  <Card title="Show your UI inside Claude" href="/docs/surfaces/mcp-apps">
+  <Card title="Show your UI inside Claude" href="/docs/clients/one-ui">
     The same React screens, rendered as an MCP App.
   </Card>
   <Card title="Add sign-in" href="/docs/guides/auth">
     OAuth for MCP clients, a session for the website, login for the CLI.
   </Card>
-  <Card title="Add a CLI" href="/docs/surfaces/cli">
+  <Card title="Add a CLI" href="/docs/clients/cli">
     Commands, flags and `login`, derived from the contract.
   </Card>
-  <Card title="Cache it in React" href="/docs/surfaces/react-query">
+  <Card title="Cache it in React" href="/docs/clients/tanstack-query">
     TanStack Query keys and invalidation from the contract.
   </Card>
 </Cards>

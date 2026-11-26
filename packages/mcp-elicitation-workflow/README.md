@@ -51,7 +51,7 @@ registerWorkflowTool(server, 'release', { runStore }, release)
 ```
 
 Measured with Claude Code, with a hook answering each form
-([`examples/mcp-workflow/apps/server/demo`](../../examples/mcp-workflow/apps/server/demo)):
+([`examples/mcp-workflow/server/demo`](../../examples/mcp-workflow/server/demo)):
 
 ```
 plain deploy: BUILD ran (total 1)

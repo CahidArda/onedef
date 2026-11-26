@@ -1,0 +1,17 @@
+{
+  "name": "@example/basic-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/contract.ts",
+    "./backend": "./src/backend.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "onedef": "workspace:*",
+    "zod": "^4.2.0"
+  }
+}

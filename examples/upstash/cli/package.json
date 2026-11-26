@@ -1,0 +1,28 @@
+{
+  "name": "@example/upstash-cli",
+  "version": "0.0.0",
+  "description": "Manage Upstash Redis databases from the terminal. Publishable: the contract is bundled, not released. Remove `private` to publish.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "upstash-redis": "./dist/main.js"
+  },
+  "files": [
+    "dist",
+    "skills"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "cli": "tsx src/main.ts",
+    "skill": "tsx scripts/skill.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@onedef/cli": "workspace:*",
+    "@example/upstash-contract": "workspace:*",
+    "dotenv": "^17.0.0",
+    "onedef": "workspace:*",
+    "tsx": "^4.0.0"
+  }
+}

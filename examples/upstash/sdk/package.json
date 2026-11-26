@@ -1,0 +1,28 @@
+{
+  "name": "@example/upstash-sdk",
+  "version": "0.0.0",
+  "description": "Typed client for the Upstash developer API. Publishable: contract bundled in, never released on its own. Remove `private` to publish.",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/sdk/src/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.dts.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "onedef": "workspace:*",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0"
+  }
+}

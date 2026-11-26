@@ -1,0 +1,33 @@
+{
+  "name": "@example/basic-sdk",
+  "version": "0.0.0",
+  "description": "The releasable SDK: contract bundled in, never published on its own. Remove `private` to release.",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/sdk/src/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.dts.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@onedef/orpc": "workspace:*",
+    "onedef": "workspace:*",
+    "zod": "^4.2.0"
+  },
+  "peerDependencies": {
+    "@orpc/client": "^1"
+  },
+  "devDependencies": {
+    "@orpc/client": "^1",
+    "tsup": "^8.5.1"
+  }
+}

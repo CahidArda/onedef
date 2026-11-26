@@ -1,6 +1,8 @@
 packages:
   - 'packages/*'
   - 'apps/*'
-  - 'examples/*/packages/*'
-  - 'examples/*/apps/*'
-  - 'examples/*/apps/*/scripts'
+  # examples: a single-package example is the folder itself (quickstart);
+  # a multi-package one has one folder per package (basic/contract, basic/app, ...)
+  - 'examples/*'
+  - 'examples/*/*'
+  - 'examples/*/docs/scripts'

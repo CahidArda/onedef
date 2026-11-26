@@ -1,61 +1,78 @@
-# onedef example: without backend functions
+# upstash: describing an API that already exists
 
-"Mode 2" against the **real Upstash developer API**. The contract says where
-each op already lives (`http` descriptors), so most surfaces need no onedef
-server at all. The one op that needs code shows how the two modes mix.
+A contract for part of the real Upstash developer API. Each op carries an `http`
+descriptor, so the SDK, CLI and MCP server call `api.upstash.com` directly with no onedef
+server in between. One op, `query`, has no upstream endpoint and is implemented with
+`@upstash/redis`: the two modes mixed in one contract.
 
 ```
-packages/recipe   the contract (`@upstash-example/recipe`, client-safe) +
-                  `@upstash-example/recipe/backend`: implement(contract, { redis: { query } })
-packages/sdk      publishable typed client: createClient(contract, http({ auth }))
-packages/cli      publishable `upstash-redis` binary (+ generated agent skill)
-packages/mcp      publishable `upstash-redis-mcp` stdio binary
-apps/app          React console + toFetchHandler(backend) at /api + createMcpHandler(backend) at /mcp
-stub.mjs          a stand-in for api.upstash.com, to run everything offline
+contract/   the contract with http descriptors (contract.ts) + implement() for `query` (backend.ts)
+app/        React console + REST/RPC/OpenAPI at /api + MCP at /mcp, one Vite process on :3000
+cli/        publishable `upstash-redis` CLI (+ generated agent skill)
+mcp/        publishable `upstash-redis-mcp` stdio server
+sdk/        publishable typed client: createClient(contract, http({ auth }))
+stub.mjs    a stand-in for api.upstash.com on :4010, to run everything offline
 ```
+
+Packages: `@example/upstash-contract` (`./backend` for the backend), `@example/upstash-app`,
+`-cli`, `-mcp`, `-sdk`.
 
 ## Who calls what
 
-| surface                     | transport          | descriptor ops (list, get, create, rename, delete)       | `query`                         |
-| --------------------------- | ------------------ | -------------------------------------------------------- | ------------------------------- |
-| SDK                         | `http({ auth })`   | straight to api.upstash.com                              | not available (NOT_IMPLEMENTED) |
-| CLI, stdio MCP              | `local(backend)`   | straight to api.upstash.com (proxied in process)         | runs in process                 |
-| app (console, REST, `/mcp`) | the hosted backend | proxied as the caller, or as the server's `.env` account | runs on the server              |
+| surface | transport | descriptor ops (list, get, create, rename, delete) | `query` |
+| --- | --- | --- | --- |
+| SDK | `http({ auth })` | straight to api.upstash.com | not available (`NOT_IMPLEMENTED`) |
+| CLI, stdio MCP | `local(backend)` | straight to api.upstash.com (proxied in process) | runs in process |
+| app (console, REST, `/mcp`) | the hosted backend | proxied as the caller, or as the server's `.env` account | runs on the server |
 
-`query` runs a Redis command with `@upstash/redis`: it calls `get` through the
-backend to read the database's REST endpoint and token, then talks to the
-database. Tokens never reach the browser.
-
-Auth is RFC 7617 Basic, account email + developer API key, from
-`UPSTASH_EMAIL` / `UPSTASH_API_KEY` (env or a `.env` next to each runnable
-package). `--team` / `UPSTASH_TEAM_ID` sends the `Upstash-Team-Id` scope.
+`query` calls `get` through the backend to read the database's REST endpoint and token,
+then talks to the database. Tokens never reach the browser, and `select` strips them from
+list responses on every surface.
 
 ## Run it
 
+From the repo root:
+
 ```bash
-pnpm install && pnpm build                         # build the onedef packages once
-node examples/upstash/stub.mjs &                   # optional: offline upstream on :4010
+pnpm install && pnpm build                       # once: builds the onedef packages
+node examples/upstash/stub.mjs &                 # offline upstream on :4010 (skip for the real API)
 export UPSTASH_API_URL=http://localhost:4010 UPSTASH_EMAIL=me@example.com UPSTASH_API_KEY=key
+pnpm --filter @example/upstash-app dev           # http://localhost:3000: console, /api, /mcp
 ```
 
-| surface                         | command                                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| console + API + `/mcp` on :3000 | `pnpm --filter @upstash-example/app dev` (or `build && start`)                                  |
-| CLI                             | `pnpm --filter @upstash-example/cli cli redis list` · `… redis query db_1 --command '["PING"]'` |
-| MCP over stdio                  | `pnpm --filter @upstash-example/mcp verify` · `… inspect`                                       |
-| agent skill                     | `pnpm --filter @upstash-example/cli skill`                                                      |
-| build an artifact               | `pnpm --filter @upstash-example/<sdk\|cli\|mcp> build`                                          |
+From this folder: `node stub.mjs &`, then `cd app && pnpm dev`.
 
-> Without `UPSTASH_API_URL` these hit your real account: create and delete are real.
+> Without `UPSTASH_API_URL` everything hits your real Upstash account: create and delete
+> are real. Credentials are an account email and a developer API key (HTTP Basic), from the
+> environment or a `.env` next to each runnable package. `UPSTASH_TEAM_ID` or `--team`
+> selects a team.
+
+## Try it
+
+With the stub and the environment above (the CLI and MCP server don't need the app):
+
+| surface | command |
+| --- | --- |
+| REST | `curl localhost:3000/api/redis` · `curl localhost:3000/api/openapi.json` |
+| CLI | `pnpm --filter @example/upstash-cli cli redis list` |
+| CLI, the implemented op | `pnpm --filter @example/upstash-cli cli redis query db_1 --command '["PING"]'` |
+| MCP over stdio | `pnpm --filter @example/upstash-mcp verify` · `… inspect` (MCP Inspector) |
+| MCP over HTTP | `claude mcp add --transport http upstash http://localhost:3000/mcp` |
+| agent skill | `pnpm --filter @example/upstash-cli skill` → `cli/skills/upstash-redis-cli/SKILL.md` |
+| build an artifact | `pnpm --filter @example/upstash-sdk build` (or `-cli`, `-mcp`) |
 
 ## What else it shows
 
-- **Real endpoints, verified against the official CLI**: list is
-  `/v2/redis/databases` (plural), get `/v2/redis/database/{id}`, rename
-  `/v2/redis/rename/{id}`.
-- **A collection mutation**: `create` has no id in the client's input type,
-  the CLI args, the MCP tool schema or the route.
-- **Response shaping**: the upstream returns credentials even in list
-  responses; `select` projects them away for every surface.
-- **Publishable artifacts without publishing the recipe**: the SDK, CLI and
-  MCP builds bundle the contract; remove `"private": true` to publish.
+- **Real endpoints**: list is `/v2/redis/databases` (plural), get `/v2/redis/database/{id}`,
+  rename `/v2/redis/rename/{id}`.
+- **A collection's create**: no id in the client's input type, the CLI args, the MCP tool
+  schema or the route.
+- **Publishable artifacts without publishing the contract**: the SDK, CLI and MCP builds
+  bundle it; remove `"private": true` to publish.
+
+## Docs
+
+- [Describing an existing API](https://onedef.cahidarda.com/docs/define/existing-api)
+- [Contract](https://onedef.cahidarda.com/docs/define/contract) · [Backend](https://onedef.cahidarda.com/docs/define/backend)
+- [CLI](https://onedef.cahidarda.com/docs/clients/cli) · [SDK](https://onedef.cahidarda.com/docs/clients/sdk) · [MCP server](https://onedef.cahidarda.com/docs/serve/mcp)
+- [All examples](https://onedef.cahidarda.com/docs/examples)

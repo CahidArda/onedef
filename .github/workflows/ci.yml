@@ -20,7 +20,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - name: Example MCP workflow server (scripted agent over HTTP)
-        run: pnpm --filter @example/workflow-server test
+        run: pnpm --filter @example/mcp-workflow-server test
       - name: Quick start example builds
         run: pnpm --filter @example/quickstart build
       - name: Docs site builds
@@ -39,10 +39,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: eve eval
-        working-directory: examples/mcp-workflow/apps/agent
+        working-directory: examples/mcp-workflow/agent
         run: pnpm eval
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: eve-evals
-          path: examples/mcp-workflow/apps/agent/.eve/evals/
+          path: examples/mcp-workflow/agent/.eve/evals/
