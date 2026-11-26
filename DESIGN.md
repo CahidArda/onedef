@@ -35,7 +35,7 @@ falls back to the descriptor (proxy) for ops it does not implement.
 ## Contract
 
 ```ts
-export const config = defineConfig({ name: 'misrava', scopes: {...}, modes: [...] })
+export const config = defineConfig({ name: 'acme', scopes: {...}, modes: [...] })
 
 export const songs = defineService(config, {
   name: 'songs',

@@ -23,7 +23,7 @@ const Song = z.object({ slug: z.string(), title: z.string(), plays: z.number(), 
 const SongSummary = Song.pick({ slug: true, title: true })
 const Account = z.object({ name: z.string() })
 
-const config = defineConfig({ name: 'misrava', modes: ['apikey', 'oauth'] })
+const config = defineConfig({ name: 'acme', modes: ['apikey', 'oauth'] })
 
 const songs = collection(config, {
   name: 'songs',

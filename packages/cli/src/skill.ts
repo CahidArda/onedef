@@ -2,7 +2,7 @@ import type { Api } from 'onedef'
 import { toCommands } from './commands.js'
 
 export interface SkillOptions {
-  /** The installed binary name, e.g. `misrava`. */
+  /** The installed binary name, e.g. `acme`. */
   bin: string
   /** One line for the frontmatter: when should an agent reach for this CLI? */
   description: string

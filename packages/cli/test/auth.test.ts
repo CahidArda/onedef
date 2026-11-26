@@ -11,9 +11,9 @@ import { cliClientMetadata, toSkillMarkdown } from '../src/index.js'
 import { run, tempConfig } from './helpers.js'
 
 const config = defineConfig({
-  name: 'misrava',
+  name: 'acme',
   auth: {
-    apiKey: { env: 'MISRAVA_API_KEY', url: 'https://misrava.app/settings/keys' },
+    apiKey: { env: 'ACME_API_KEY', url: 'https://acme.dev/settings/keys' },
     oauth: { scopes: ['songs:read'] },
   },
 })
@@ -46,29 +46,29 @@ test('the env API key reaches the transport as call.auth', async () => {
   const { seen, transport } = recorder()
   const result = await run(contract, ['account', 'me'], {
     transport,
-    env: { MISRAVA_API_KEY: KEY, ...tempConfig('misrava') },
+    env: { ACME_API_KEY: KEY, ...tempConfig('acme') },
   })
   assert.equal(result.code, 0, result.stderr)
   assert.deepEqual(seen, [{ apiKey: KEY }])
 })
 
 test('login --with-token stores the key (0600), calls use it, whoami masks it, logout removes it', async () => {
-  const env = tempConfig('misrava')
-  const file = join(env.MISRAVA_CONFIG_DIR!, 'credentials.json')
+  const env = tempConfig('acme')
+  const file = join(env.ACME_CONFIG_DIR!, 'credentials.json')
   const { seen, transport } = recorder()
-  const options = { transport, env, resource: 'https://misrava.app/api' }
+  const options = { transport, env, resource: 'https://acme.dev/api' }
 
   const login = await run(contract, ['login', '--with-token'], { ...options, stdin: `${KEY}\n` })
   assert.equal(login.code, 0, login.stderr)
-  assert.match(login.stderr, /Logged in to misrava with API key sk_l…cdef/)
+  assert.match(login.stderr, /Logged in to acme with API key sk_l…cdef/)
   assert.equal(statSync(file).mode & 0o777, 0o600)
-  assert.equal(statSync(env.MISRAVA_CONFIG_DIR!).mode & 0o777, 0o700)
-  assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).resources, { 'https://misrava.app/api': { apiKey: KEY } })
+  assert.equal(statSync(env.ACME_CONFIG_DIR!).mode & 0o777, 0o700)
+  assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).resources, { 'https://acme.dev/api': { apiKey: KEY } })
 
   await run(contract, ['account', 'me'], options)
   assert.deepEqual(seen.at(-1), { apiKey: KEY })
   // the environment still wins over a stored key
-  await run(contract, ['account', 'me'], { ...options, env: { ...env, MISRAVA_API_KEY: 'sk_from_env' } })
+  await run(contract, ['account', 'me'], { ...options, env: { ...env, ACME_API_KEY: 'sk_from_env' } })
   assert.deepEqual(seen.at(-1), { apiKey: 'sk_from_env' })
 
   const whoami = await run(contract, ['whoami'], options)
@@ -84,11 +84,11 @@ test('login --with-token stores the key (0600), calls use it, whoami masks it, l
 
   const anon = await run(contract, ['whoami'], options)
   assert.equal(anon.code, 4)
-  assert.match(anon.stderr, /Not logged in\. To authenticate, run `misrava login` or set MISRAVA_API_KEY\./)
+  assert.match(anon.stderr, /Not logged in\. To authenticate, run `acme login` or set ACME_API_KEY\./)
 })
 
 test('non-interactive `login` reads the key from stdin even when OAuth is declared', async () => {
-  const env = tempConfig('misrava')
+  const env = tempConfig('acme')
   const { seen, transport } = recorder()
   assert.equal((await run(contract, ['login'], { transport, env, stdin: KEY })).code, 0)
   await run(contract, ['account', 'me'], { transport, env })
@@ -99,19 +99,19 @@ test('UNAUTHORIZED exits 4 with a login hint; help lists the auth commands', asy
   const transport: Transport = async () => {
     throw new ApiError('UNAUTHORIZED', 'GET /me → 401')
   }
-  const result = await run(contract, ['account', 'me'], { transport, env: tempConfig('misrava') })
+  const result = await run(contract, ['account', 'me'], { transport, env: tempConfig('acme') })
   assert.equal(result.code, 4)
-  assert.equal(result.stderr, 'error: GET /me → 401\nTo authenticate, run `misrava login` or set MISRAVA_API_KEY.\n')
+  assert.equal(result.stderr, 'error: GET /me → 401\nTo authenticate, run `acme login` or set ACME_API_KEY.\n')
 
   const help = await run(contract, ['--help'], { transport })
-  assert.match(help.stdout, /Authentication:\n {2}login\s+Sign in to misrava in your browser\n {2}logout/)
+  assert.match(help.stdout, /Authentication:\n {2}login\s+Sign in to acme in your browser\n {2}logout/)
   const loginHelp = await run(contract, ['login', '--help'], { transport })
   assert.match(loginHelp.stdout, /--api-key\s+Paste an API key/)
   assert.match(loginHelp.stdout, /--with-token\s+Read an API key from stdin/)
 
-  const skill = toSkillMarkdown(contract, { bin: 'misrava', description: 'Lessons.' })
-  assert.match(skill, /set `MISRAVA_API_KEY`/)
-  assert.match(skill, /misrava login --with-token/)
+  const skill = toSkillMarkdown(contract, { bin: 'acme', description: 'Lessons.' })
+  assert.match(skill, /set `ACME_API_KEY`/)
+  assert.match(skill, /acme login --with-token/)
 })
 
 // ---------------------------------------------------------------------------
@@ -231,8 +231,8 @@ const browser = async (url: string) => {
 
 async function oauthSetup(options: Parameters<typeof mockOAuth>[0] = {}) {
   const as = await mockOAuth(options)
-  const env = tempConfig('misrava')
-  const file = join(env.MISRAVA_CONFIG_DIR!, 'credentials.json')
+  const env = tempConfig('acme')
+  const file = join(env.ACME_CONFIG_DIR!, 'credentials.json')
   const base = {
     transport: http({ baseUrl: `${as.origin}/api` }),
     resource: `${as.origin}/api`,
@@ -256,7 +256,7 @@ test('OAuth login via DCR: browser round trip, tokens stored, calls carry the be
   assert.equal(login.code, 0, login.stderr)
   assert.ok(opened.startsWith(`${as.origin}/authorize?`))
   assert.ok(login.stderr.includes(opened), 'the URL is printed too')
-  assert.match(login.stderr, /Logged in to misrava \(access token expires in 60m\)/)
+  assert.match(login.stderr, /Logged in to acme \(access token expires in 60m\)/)
 
   // DCR: one registration, with exactly the loopback redirect URIs and the declared scope
   assert.equal(as.state.registrations.length, 1)
@@ -311,14 +311,14 @@ test('OAuth: an expiring token is refreshed before the call; a rejected one is r
   as.state.refresh.clear()
   const expired = await run(contract, ['account', 'me'], base)
   assert.equal(expired.code, 4)
-  assert.match(expired.stderr, /session has expired\. Run `misrava login`/)
+  assert.match(expired.stderr, /session has expired\. Run `acme login`/)
   assert.equal(stored(), undefined)
 })
 
 test('OAuth login uses CIMD when the AS supports it and clientMetadataUrl is set', async (t) => {
   const { as, base, stored } = await oauthSetup({ cimd: true })
   t.after(as.close)
-  const clientMetadataUrl = 'https://misrava.app/oauth/cli.json'
+  const clientMetadataUrl = 'https://acme.dev/oauth/cli.json'
   const login = await run(contract, ['login'], {
     ...base,
     oauth: { ...base.oauth, clientMetadataUrl },
@@ -332,10 +332,10 @@ test('OAuth login uses CIMD when the AS supports it and clientMetadataUrl is set
 
   // the document that URL must serve lists the same redirect URIs login used
   assert.deepEqual(
-    cliClientMetadata({ clientId: clientMetadataUrl, clientName: 'Misrava CLI', ports: [47391, 47392] }),
+    cliClientMetadata({ clientId: clientMetadataUrl, clientName: 'Acme CLI', ports: [47391, 47392] }),
     {
       client_id: clientMetadataUrl,
-      client_name: 'Misrava CLI',
+      client_name: 'Acme CLI',
       redirect_uris: ['http://127.0.0.1:47391/callback', 'http://127.0.0.1:47392/callback'],
       grant_types: ['authorization_code', 'refresh_token'],
       response_types: ['code'],

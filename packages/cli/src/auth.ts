@@ -193,7 +193,7 @@ export interface AuthCommand {
   run(flags: Record<string, string | boolean>): Promise<void>
 }
 
-/** " Run `misrava login` (or set MISRAVA_API_KEY)." — whatever the config makes possible. */
+/** " Run `acme login` (or set ACME_API_KEY)." — whatever the config makes possible. */
 export function hint(api: Api, bin: string): string {
   const auth = api.config.auth
   const ways = [

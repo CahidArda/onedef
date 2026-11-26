@@ -18,7 +18,7 @@ import { createQueryUtils } from '../src/index.js'
 
 const Song = z.object({ slug: z.string(), title: z.string() })
 const Account = z.object({ name: z.string() })
-const config = defineConfig({ name: 'misrava' })
+const config = defineConfig({ name: 'acme' })
 
 const songs = collection(config, {
   name: 'songs',

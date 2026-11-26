@@ -132,7 +132,7 @@ function exitCodeOf(code: string): number {
  *   import { runCli } from '@onedef/cli'
  *   import { rpc } from '@onedef/orpc/client'
  *   import { contract } from './contract'
- *   await runCli(contract, { transport: rpc({ url: 'https://misrava.app/api' }) })
+ *   await runCli(contract, { transport: rpc({ url: 'https://acme.dev/api' }) })
  *
  * Commands, flags, help, tables, the `--yes` guard and `login`/`logout`/`whoami`
  * all come from the contract. Resolves to the exit code: 0 ok · 1 error ·

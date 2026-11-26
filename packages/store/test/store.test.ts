@@ -29,7 +29,7 @@ const Note = z.object({ id: z.string(), text: z.string(), color: z.string() })
 const Account = z.object({ name: z.string(), theme: z.string() })
 const Settings = z.object({ volume: z.number() })
 
-const config = defineConfig({ name: 'misrava' })
+const config = defineConfig({ name: 'acme' })
 
 const songs = collection(config, {
   name: 'songs',
