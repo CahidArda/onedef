@@ -4,21 +4,12 @@ description: Define your API once. Get a backend, a typed client, REST with Open
 ---
 
 **onedef turns one TypeScript description of your API into every way people and agents
-use it.** You write the contract and the handlers once. onedef gives you:
+use it.** You write a contract and its handlers. The server side exposes it as REST with
+OpenAPI, an MCP server, an MCP App and docs. The calling side gets one typed client, and
+everything built on it: your web UI, the same UI inside Claude, TanStack Query, a CLI with
+`login`, an SDK.
 
-- a **backend** with validated input and output,
-- **REST + RPC** with an **OpenAPI** document,
-- a **typed client** for your web app and your SDK,
-- an **MCP server**, so Claude, ChatGPT and Cursor can call your API as tools,
-- an **MCP App**: your own UI, rendered inside Claude and ChatGPT,
-- a **CLI** with `login` (OAuth or API key),
-- **TanStack Query** helpers with cache keys and invalidation worked out for you,
-- and **API docs**.
-
-<Diagram name="one-contract" alt="The contract and its handlers produce REST with OpenAPI and a typed client; an MCP server and MCP App; and a CLI and TanStack Query helpers." />
-
-Add a field or an endpoint in one place, and every surface has it. Forget a handler, and
-it's a compile error.
+<OneContract />
 
 ```ts title="contract.ts"
 export const notes = collection(config, {
@@ -27,20 +18,31 @@ export const notes = collection(config, {
   id: 'id',
   fields: Note,
   create: { input: z.object({ title: z.string() }) },
-  actions: { complete: action({ summary: 'Mark a note as done', output: Note, needs: 'object' }) },
+  actions: {
+    complete: action({ summary: 'Mark a note as done', output: Note, needs: 'object' }),
+  },
 })
 ```
 
-From that one declaration:
+Add a field or an operation there, and every surface has it. Forget a handler, and it's a
+compile error.
+
+**What the server exposes**, from `backend = implement(contract, handlers)`:
 
 | surface | what you get | how |
 | --- | --- | --- |
-| REST | `GET /api/notes`, `GET /api/notes/{id}`, `POST /api/notes`, `POST /api/notes/{id}/complete` | `toNextHandlers(backend)` |
+| REST + RPC | `GET /api/notes`, `POST /api/notes`, `POST /api/notes/{id}/complete` | `toNextHandlers(backend)` |
 | OpenAPI | `/api/openapi.json` | same line |
-| MCP | tools `notes_list`, `notes_get`, `notes_create`, `notes_complete` | `createMcpHandler(backend)` |
-| typed client | `api.notes.complete({ id })`, fully typed | `createClient(contract, rpc({ url: '/api' }))` |
-| CLI | `notes notes complete <id>` | `runCli(contract, …)` |
+| MCP server | tools `notes_list`, `notes_get`, `notes_create`, `notes_complete` | `createMcpHandler(backend)` |
+| MCP App | your UI, served as an MCP resource | `createMcpHandler(backend, { app: serveMcpApp() })` |
+
+**What calls it**, all through one client:
+
+| caller | example | how |
+| --- | --- | --- |
+| typed client | `api.notes.complete({ id })` | `createClient(contract, transport)` |
 | React | `useQuery(q.notes.get.queryOptions({ id }))` | `createQueryUtils(contract, client)` |
+| CLI | `notes notes complete <id>`, `notes login` | `runCli(contract, { transport })` |
 
 <Cards>
   <Card title="Quick start" href="/docs/quickstart">
@@ -52,35 +54,48 @@ From that one declaration:
   </Card>
 </Cards>
 
+## One client, any transport
+
+A **transport** decides who answers a call. The same client code runs on all of them:
+
+<Transports />
+
+[Clients and transports →](/docs/clients)
+
+## One UI, in the browser and inside Claude (as an MCP App)
+
+Build your screens once. Deployed, they call your API over HTTP. Opened by a tool inside
+Claude or ChatGPT, the same screens run as an MCP App and call your API as MCP tools. One
+expression picks the transport:
+
+```ts
+export const api = createClient(contract, mcpApp() ?? rpc({ url: '/api' }))
+```
+
+<OneUi />
+
+`mcpApp()` is defined only when the page was served by your MCP server, so the check is
+synchronous. [One UI →](/docs/clients/one-ui)
+
 ## Why onedef
 
 **Agents are now users of your API.** One product often needs a web app, a public API, an
-SDK, a CLI and an MCP server. Usually each one is written by hand, and each one drifts from
-the others: a field the web app has and the MCP server doesn't, a CLI that lags the API.
-
-onedef makes them one thing:
+SDK, a CLI and an MCP server. Written by hand, they drift apart: a field the web app has
+and the MCP server doesn't, a CLI that lags the API.
 
 - **One source of truth.** The contract is a value: zod (or any Standard Schema) types plus
-  a summary per operation. Every surface is derived from it, including tool names,
-  descriptions, CLI commands, REST paths and the OpenAPI document.
+  a summary per operation. Tool names, descriptions, CLI commands, REST paths and the
+  OpenAPI document are all derived from it.
 - **Type-safe end to end.** Handlers are checked against the contract, and clients are typed
-  from it. A missing handler, a misspelled op or a wrong return shape is a compile error.
+  from it.
 - **Server code stays on the server.** The contract holds no handler code, so importing it
   in a browser, a CLI or a published SDK never pulls in your backend.
-- **Built for agents.** MCP tools carry your descriptions. MCP Apps render your real UI
-  inside Claude and ChatGPT. Long tasks can pause to ask the user or the agent and continue
-  where they stopped.
+- **Built for agents.** MCP tools carry your descriptions. Your real UI renders inside
+  Claude and ChatGPT. Long tasks can pause to ask the user or the agent and continue where
+  they stopped.
 - **Fits what you have.** Plain fetch handlers work in Next.js, Hono, Bun, Deno and
-  workers. Your own database stays yours. Describe an API you already run, and onedef gives
-  it an MCP server, a CLI and a typed client without a new backend.
-
-## How it fits together
-
-<Diagram name="fits-together" alt="contract.ts holds the schemas and summaries and no server code. It feeds backend.ts, where implement(contract, handlers) attaches the handlers; toNextHandlers(backend) serves REST, RPC and OpenAPI, and createMcpHandler(backend) serves MCP tools and the MCP App. It also feeds the clients: createClient, runCli and createQueryUtils. A client reaches the backend through a transport: rpc(), local(), mcpApp() or http()." />
-
-A **transport** decides who answers a call: `rpc()` over HTTP, `local()` in process,
-`mcpApp()` through the MCP host, or `http()` against an existing REST API. The same client
-code runs on all of them.
+  workers. Your database stays yours. Describe an API you already run, and onedef gives it
+  an MCP server, a CLI and a typed client without a new backend.
 
 ## Status
 

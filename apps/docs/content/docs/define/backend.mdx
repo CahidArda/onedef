@@ -23,8 +23,8 @@ export const backend = implement(contract, {
 })
 ```
 
-TypeScript checks every handler against the contract. A missing handler, a misspelled
-operation or a wrong return type is a compile error.
+Every handler is checked against the contract: a missing handler, a misspelled operation
+or a wrong return type is a compile error.
 
 ## What a handler receives
 
@@ -37,8 +37,8 @@ operation or a wrong return type is a compile error.
 | `client` | a typed client bound to this same request, to call other operations without HTTP |
 | `request` | the incoming `Request`, when there is one |
 
-Outputs are validated too, and fields the contract doesn't declare are stripped. So REST,
-RPC, MCP and in-process calls all return exactly the same shape, and nothing extra leaks.
+Outputs are validated too, and undeclared fields are stripped. REST, RPC, MCP and
+in-process calls return exactly the same shape, and nothing extra leaks.
 
 ## Errors
 
@@ -56,24 +56,13 @@ REST answers with the status, the typed client throws an `ApiError` with the sam
 the CLI prints it and exits non-zero, and MCP returns a tool error the agent can read.
 `fail('NOT_FOUND', '…', { data })` passes structured details along.
 
-## Calling the backend in process
+## Calling it, serving it
 
-`local(backend)` is a transport that calls handlers directly: no HTTP, no serialization.
-Use it in server components, jobs and tests.
+| | |
+| --- | --- |
+| in process (server components, jobs, tests) | `createClient(contract, local(backend))`; see [Typed client](/docs/clients) |
+| REST, RPC and OpenAPI | `toNextHandlers(backend)` or `toFetchHandler(backend)`; see [REST](/docs/serve/rest) |
+| MCP | `createMcpHandler(backend)`; see [MCP server](/docs/serve/mcp) |
 
-```ts
-import { createClient, local } from 'onedef'
-
-const api = createClient(contract, local(backend))
-await api.songs.get({ slug: 'la-vie-en-rose' })
-```
-
-## Serving it
-
-The backend plugs into the surfaces as plain fetch handlers:
-
-- [REST, RPC and OpenAPI](/docs/surfaces/rest): `toNextHandlers(backend)` or `toFetchHandler(backend)`
-- [MCP](/docs/surfaces/mcp): `createMcpHandler(backend)`
-
-If you'd rather not write persistence for simple objects, `implementStore` writes `list`,
-`get` and `delete` for you. See [Storage](/docs/guides/storage).
+Rather not write persistence for simple objects? `implementStore` writes `list`, `get` and
+`delete` for you. See [Storage](/docs/guides/storage).

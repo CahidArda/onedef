@@ -3,8 +3,8 @@ title: Describe an existing API
 description: Give an API you already run an MCP server, a CLI and a typed client, without writing a backend.
 ---
 
-Your API might already exist, in another language or another service. Describe where each
-operation lives, and onedef calls it directly. There's no onedef server at all.
+Your API may already exist, in another language or another service. Describe where each
+operation lives, and every surface calls it directly. No onedef server at all.
 
 ```ts title="contract.ts"
 import { defineConfig, defineService, query, mutation } from 'onedef'
@@ -44,7 +44,7 @@ An `http` descriptor says how to call one operation:
 | `select` | map the upstream response onto your output schema |
 | `errors` | map upstream statuses onto your error codes, e.g. `{ 404: 'NOT_FOUND' }` |
 
-Then every surface uses the `http()` transport:
+Then every surface uses the [`http()` transport](/docs/clients):
 
 ```ts
 import { createClient, http } from 'onedef'

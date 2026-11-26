@@ -1,0 +1,113 @@
+---
+title: Typed client and transports
+description: One client, typed from the contract. The transport decides who answers the call.
+---
+
+```ts
+const api = createClient(contract, transport)
+
+const song = await api.songs.get({ slug: 'la-vie-en-rose' })   // typed from `fields`
+await api.songs.rename({ slug: song.slug, title: 'La Vie en rose' })
+```
+
+The calls and their types come from the contract. The **transport** is the only thing
+that changes from one place to the next:
+
+<Transports />
+
+| transport | import | who answers | use it in |
+| --- | --- | --- | --- |
+| `local(backend)` | `onedef` | your handlers, in process | server components, jobs, tests |
+| `rpc({ url })` | `@onedef/orpc/client` | your backend, over HTTP | web apps, the CLI, SDKs |
+| `mcpApp()` | `@onedef/mcp/app` | your MCP server, through the host | a UI inside Claude or ChatGPT |
+| `http({ baseUrl })` | `onedef` | an existing REST API | APIs onedef didn't build |
+
+Every transport returns the same validated shapes and throws the same `ApiError`, so code
+written against the client doesn't care which one it got.
+
+## In process: `local(backend)`
+
+```ts title="lib/server-client.ts"
+import { createClient, local } from 'onedef'
+import { backend } from './backend'   // server only
+
+export const api = createClient(contract, local(backend))
+```
+
+Calls the handlers directly: no HTTP, no serialization. Input and output are still
+validated.
+
+## Over HTTP: `rpc({ url })`
+
+```ts title="lib/client.ts"
+import { createClient } from 'onedef'
+import { rpc } from '@onedef/orpc/client'
+
+export const api = createClient(contract, rpc({ url: '/api' }))
+```
+
+`url` is where you mounted the [REST and RPC handler](/docs/serve/rest). No handler code
+ends up in the bundle: the client only imports the contract.
+
+## Over MCP: `mcpApp()`
+
+```ts
+import { mcpApp } from '@onedef/mcp/app'
+
+mcpApp()   // a transport inside an MCP App, `undefined` anywhere else
+```
+
+Inside an MCP App, each call is an MCP tool call that the host (Claude, ChatGPT) sends to
+your [MCP server](/docs/serve/mcp). That makes one expression enough for a UI that runs in
+both places:
+
+```ts
+export const api = createClient(contract, mcpApp() ?? rpc({ url: '/api' }))
+```
+
+See [One UI, web and MCP App](/docs/clients/one-ui).
+
+## An existing API: `http({ baseUrl })`
+
+```ts
+import { createClient, http } from 'onedef'
+
+export const api = createClient(contract, http({ baseUrl: 'https://api.acme.dev' }))
+```
+
+Calls the API directly, following each operation's `http` descriptor. `baseUrl` defaults to
+the config's `baseUrl`. See [Describe an existing API](/docs/define/existing-api).
+
+## Credentials
+
+`rpc()` and `http()` take `auth`, read on every call, and send it the way the contract's
+`auth` config says:
+
+```ts
+rpc({ url: '/api', auth: async () => ({ bearer: await getToken() }) })
+http({ auth: () => ({ apiKey: process.env.ACME_API_KEY! }) })
+```
+
+Credentials are `{ bearer }`, `{ apiKey }` or `{ basic: { username, password } }`. `mcpApp()`
+needs none: its calls ride the host's MCP connection, which is already signed in. See [Auth](/docs/guides/auth).
+
+## Errors
+
+```ts
+import { ApiError } from 'onedef'
+
+try {
+  await api.songs.get({ slug: 'nope' })
+} catch (error) {
+  if (error instanceof ApiError && error.code === 'NOT_FOUND') {
+    // the code the handler passed to fail(), on every transport
+  }
+}
+```
+
+## Built on the client
+
+- [One UI, web and MCP App](/docs/clients/one-ui): the same screens on your site and inside Claude.
+- [TanStack Query](/docs/clients/tanstack-query): query keys and cache updates from the contract.
+- [CLI](/docs/clients/cli): a command-line tool with login.
+- [A published SDK](/docs/clients/sdk): the contract plus a transport, on npm.

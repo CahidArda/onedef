@@ -21,11 +21,15 @@ acme songs rename la-vie-en-rose --title "La Vie en rose"
 acme songs delete la-vie-en-rose --yes
 ```
 
-- **Commands and flags** come from operations and input fields; `--help` uses your summaries.
-- **Output:** lists print as tables, with the next-page command when there is one. Pass
-  `--json` for scripts.
-- **Destructive operations** ask for `--yes`.
-- **Errors** print their code and message, and exit non-zero.
+| | |
+| --- | --- |
+| commands and flags | from operations and input fields; `--help` uses your summaries |
+| output | lists print as tables, with the next-page command; `--json` for scripts |
+| destructive operations | ask for `--yes` |
+| errors | print the code and message, exit non-zero |
+
+The transport is any [client transport](/docs/clients): `rpc({ url })` for your backend,
+`http()` for an [existing API](/docs/define/existing-api).
 
 ## Login
 
@@ -37,12 +41,12 @@ acme login --with-token   # paste an API key
 ACME_API_KEY=… acme …     # CI: credentials from the environment
 ```
 
-`acme login` signs in exactly like an MCP client does. It discovers your authorization
-server from the API, registers with CIMD (or DCR as a fallback), and logs in with PKCE
-through a local callback. Tokens are refreshed before they expire. Credentials are stored
-in `~/.config/acme/credentials.json` with `0600` permissions. See [Auth](/docs/guides/auth).
+`acme login` signs in like an MCP client: it discovers your authorization server from the
+API, registers with CIMD (DCR as a fallback), and uses PKCE through a local callback.
+Tokens refresh before they expire. Credentials live in `~/.config/acme/credentials.json`
+(`0600`). See [Auth](/docs/guides/auth).
 
 ## An agent skill
 
-`toSkillMarkdown(contract, { bin: 'acme' })` writes a `SKILL.md` that teaches an agent to use your CLI, for
-agents that work in a terminal.
+`toSkillMarkdown(contract, { bin: 'acme' })` writes a `SKILL.md` that teaches an agent
+working in a terminal to use your CLI.

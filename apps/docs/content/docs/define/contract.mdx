@@ -3,15 +3,15 @@ title: The contract
 description: What your API is, as one value. Every surface is derived from it.
 ---
 
-The contract describes your API: its objects, its operations, their input and output
-schemas, and a one-line summary for each. It holds **no server code**, so a browser, a CLI
-or a published SDK can import it without pulling in your backend.
+The contract is your API as one value: objects, operations, their schemas and summaries.
+It holds **no server code**, so a browser, a CLI or a published SDK can import it without
+pulling in your backend.
 
 ```ts
 import { defineApi, defineConfig } from 'onedef'
 
 export const config = defineConfig({
-  name: 'misrava',                               // MCP server name, CLI binary, tool prefix
+  name: 'acme',                               // MCP server name, CLI binary, tool prefix
   description: 'French songs taught line by line.', // MCP server instructions, docs intro
 })
 
@@ -22,8 +22,6 @@ Schemas are any [Standard Schema](https://standardschema.dev) validator with JSO
 support: zod 4.2 or later, valibot or arktype. Nothing to register.
 
 ## Objects: `collection()` and `singleton()`
-
-Most APIs are objects, so that's the main way to declare them.
 
 ```ts
 export const songs = collection(config, {
@@ -99,7 +97,7 @@ works for one works for the other.
 
 | op | MCP tool | CLI | REST |
 | --- | --- | --- | --- |
-| `songs.setOffset` | `songs_set_offset` | `misrava songs set-offset <slug>` | `POST /songs/{slug}/set-offset` |
+| `songs.setOffset` | `songs_set_offset` | `acme songs set-offset <slug>` | `POST /songs/{slug}/set-offset` |
 
 Summaries become MCP tool titles, CLI help and OpenAPI summaries. `description` becomes the
 longer explanation an agent reads before calling a tool, so it is worth writing well.

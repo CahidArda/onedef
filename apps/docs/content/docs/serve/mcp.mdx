@@ -16,12 +16,11 @@ That's an MCP server over Streamable HTTP at `/mcp`, with one tool per operation
 | op | tool | annotations |
 | --- | --- | --- |
 | `songs.list` | `songs_list` | `readOnlyHint` (a query) |
-| `songs.rename` | `songs_rename` | — |
+| `songs.rename` | `songs_rename` | none |
 | `songs.delete` | `songs_delete` | `destructiveHint` |
 
-Each tool's title, description and input schema come from the contract, so the agent knows
-what it does and what to send. Results come back as structured content matching your
-output schema. Errors come back as tool errors the agent can read and act on.
+Titles, descriptions and input schemas come from the contract. Results are structured
+content matching your output schema; errors are tool errors the agent can read.
 
 ## Connect a client
 
@@ -29,7 +28,7 @@ output schema. Errors come back as tool errors the agent can read and act on.
 claude mcp add --transport http myapp https://myapp.com/mcp
 ```
 
-In Claude.ai or ChatGPT, add it as a custom connector with the same URL.
+In Claude.ai or ChatGPT, add the same URL as a custom connector.
 
 ## Run handlers here, or forward
 
@@ -38,9 +37,9 @@ createMcpHandler(backend)                                          // runs the h
 createMcpHandler(contract, { transport: rpc({ url: API_URL }) })   // forwards to a deployed backend
 ```
 
-The second form is an MCP server with no handler code at all: it calls your API like any
-other client. Use it to put an MCP server in front of an API that runs elsewhere, or one
-you only [describe](/docs/guides/existing-api).
+The second form has no handler code: it calls your API like any other
+[client](/docs/clients). Use it in front of an API that runs elsewhere, or one you only
+[describe](/docs/define/existing-api).
 
 ## Local, over stdio
 
@@ -51,11 +50,11 @@ await serveMcpStdio(contract, { transport: rpc({ url: API_URL }) })
 ```
 
 Credentials come from the environment variable your `auth` config names, so
-`ACME_API_KEY=… npx acme-mcp` just works.
+`ACME_API_KEY=… npx acme-mcp` just works. See [A published SDK](/docs/clients/sdk).
 
 ## Sign-in
 
-`auth` makes `/mcp` require an OAuth token. Without one it answers `401` with the discovery
+With `auth`, `/mcp` requires an OAuth token. Without one it answers `401` with the discovery
 header, and clients like Claude open your sign-in page. See [Auth](/docs/guides/auth).
 
 ```ts
@@ -66,5 +65,5 @@ createMcpHandler(backend, {
 
 ## Show a UI
 
-Pass `app`, and the tool calls you choose open your own UI inside the conversation. See
-[MCP Apps](/docs/surfaces/mcp-apps).
+Pass `app`, and the tool calls you choose open your own screens inside the conversation:
+the same screens as your website. See [One UI, web and MCP App](/docs/clients/one-ui).

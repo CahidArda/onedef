@@ -17,9 +17,9 @@ That one declaration drives every surface:
 
 | surface | what it does |
 | --- | --- |
-| CLI | `acme login` (OAuth in the browser), `acme login --with-token` (API key), `ACME_API_KEY=…` in CI |
-| MCP | answers `401` with the OAuth discovery header, so Claude and ChatGPT open your sign-in page |
-| clients | `rpc({ url, auth: () => ({ bearer: token }) })` sends the right header |
+| [CLI](/docs/clients/cli) | `acme login` (OAuth in the browser), `acme login --with-token` (API key), `ACME_API_KEY=…` in CI |
+| [MCP](/docs/serve/mcp) | answers `401` with the OAuth discovery header, so Claude and ChatGPT open your sign-in page |
+| [clients](/docs/clients) | `rpc({ url, auth: () => ({ bearer: token }) })` sends the right header |
 | backend | `context()` sees the request and the parsed credentials |
 
 ## Who is calling
@@ -73,9 +73,6 @@ to sign in.
 clients plug into `verify`. With Clerk, one `authenticateRequest` call accepts both the
 website's session and an MCP client's OAuth token. Turn on "Publish CIMD support" in its
 dashboard, so MCP clients register without a manual step.
-
-[Misrava](https://github.com/CahidArda/misrava) puts every page and endpoint behind Clerk
-this way: the website, `/api`, `/docs` and `/mcp`.
 
 ## Restricting fields by credential
 

@@ -3,13 +3,11 @@ title: API docs
 description: An API reference generated from the contract, as an OpenAPI document or a Mintlify site.
 ---
 
-The OpenAPI document is always there, at `/api/openapi.json` (see
-[REST](/docs/surfaces/rest)). Point any OpenAPI viewer at it, such as Scalar, Redoc or
-Swagger UI.
+The OpenAPI document is always served at `/api/openapi.json` (see
+[REST](/docs/serve/rest)). Point Scalar, Redoc, Swagger UI or any OpenAPI viewer at it.
 
-To generate a full docs site instead, use `@onedef/docs`. It writes a
-[Mintlify](https://mintlify.com) site from the contract at build time, with no running
-server:
+For a full docs site, `@onedef/docs` writes a [Mintlify](https://mintlify.com) site from the
+contract at build time, with no running server:
 
 ```ts title="scripts/docs.ts"
 import { writeMintlifySite } from '@onedef/docs'

@@ -35,7 +35,7 @@ The agent's answer is typed: `outline.sections` is a `string[]`.
 
 ## How the agent drives it
 
-<Diagram name="agent-loop" alt="The server sends the agent the next question, and the agent sends back the answer, until the run is done." />
+<AgentLoop />
 
 Registered as `write_guide`, a workflow with `agentInput: true` also gets a
 `write_guide_next` tool. The agent:

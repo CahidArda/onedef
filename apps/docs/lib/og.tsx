@@ -18,15 +18,16 @@ export interface OgContent {
 }
 
 const SECTIONS: Record<string, string> = {
-  concepts: 'Concepts',
-  surfaces: 'Surfaces',
+  define: 'Define',
+  serve: 'Serve',
+  clients: 'Clients',
   guides: 'Guides',
   'mcp-elicitation-workflow': 'MCP elicitation workflow',
 };
 
 /** The section label for a docs page, from its first slug. */
 export function sectionOf(slugs: string[]): string {
-  return (slugs.length > 1 && SECTIONS[slugs[0]!]) || 'Docs';
+  return SECTIONS[slugs[0]!] || 'Docs';
 }
 
 type Fonts = NonNullable<NonNullable<ConstructorParameters<typeof ImageResponse>[1]>['fonts']>;

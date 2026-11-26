@@ -8,15 +8,15 @@ which stands on its own.
 
 | package | what | you need it for |
 | --- | --- | --- |
-| `onedef` | the contract, `implement`, `createClient`, the `local()` and `http()` transports, errors | always |
-| `@onedef/orpc` | `toNextHandlers`, `toFetchHandler`, `generateOpenApi`; `/client` → `rpc()` | [REST, RPC and OpenAPI](/docs/surfaces/rest), and the HTTP client |
-| `@onedef/mcp` | `createMcpHandler`, `serveMcpStdio`, `protectedResourceMetadata`; `/app` → `mcpApp()`, `launch()` | an [MCP server](/docs/surfaces/mcp) and [MCP Apps](/docs/surfaces/mcp-apps) |
-| `@onedef/next` | `withOnedef`; `/server` → `serveMcpApp()`; `/mcp-app` → `defineMcpApp()` | MCP Apps built by Next.js |
-| `@onedef/cli` | `runCli` with `login` / `logout` / `whoami`, `toSkillMarkdown` | a [CLI](/docs/surfaces/cli) |
-| `@onedef/query` | `createQueryUtils` | [TanStack Query](/docs/surfaces/react-query) |
+| `onedef` | the contract, `implement`, `createClient`, the `local()` and `http()` transports, errors | always; see [the typed client](/docs/clients) |
+| `@onedef/orpc` | `toNextHandlers`, `toFetchHandler`, `generateOpenApi`; `/client` → `rpc()` | [REST, RPC and OpenAPI](/docs/serve/rest), and the `rpc()` transport |
+| `@onedef/mcp` | `createMcpHandler`, `serveMcpStdio`, `protectedResourceMetadata`; `/app` → `mcpApp()`, `launch()` | an [MCP server](/docs/serve/mcp), and the `mcpApp()` transport for [one UI](/docs/clients/one-ui) |
+| `@onedef/next` | `withOnedef`; `/server` → `serveMcpApp()`; `/mcp-app` → `defineMcpApp()` | the [MCP App](/docs/clients/one-ui), built by Next.js |
+| `@onedef/cli` | `runCli` with `login` / `logout` / `whoami`, `toSkillMarkdown` | a [CLI](/docs/clients/cli) |
+| `@onedef/query` | `createQueryUtils` | [TanStack Query](/docs/clients/tanstack-query) |
 | `@onedef/store` | `implementStore`, `memoryStore`; `/fs` → `fsStore`; `/redis` → `redisStore` | [persistence written for you](/docs/guides/storage) |
 | `@onedef/process` | `runsIn`, `memoryRunStore` | [processes](/docs/guides/processes) |
-| `@onedef/docs` | `writeMintlifySite` | a generated [API docs](/docs/surfaces/api-docs) site |
+| `@onedef/docs` | `writeMintlifySite` | a generated [API docs](/docs/serve/api-docs) site |
 | `@onedef/mcp-elicitation-workflow` | `createWorkflow`, `workflowRuns`, run stores; `/mcp` → `registerWorkflowTool`; `/redis` → `redisRunStore` | [MCP tools that ask and continue](/docs/mcp-elicitation-workflow), with or without onedef |
 
 **Schemas** are any [Standard Schema](https://standardschema.dev) validator with JSON Schema

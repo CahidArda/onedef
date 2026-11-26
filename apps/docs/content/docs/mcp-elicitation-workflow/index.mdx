@@ -92,7 +92,7 @@ The client still calls the tool twice. The second call carries the run's id, so 
 picks up where it was: `build` returns its recorded result instead of running again, and
 the user's answer goes to the question that was waiting. Side by side:
 
-<Diagram name="elicitation-replay" alt="Two columns, call 1 and call 2. Plain elicitation: call 1 builds build-1 and asks the user; after the user approves, call 2 builds build-2 and ships it. Workflow: call 1 builds build-1 and records it; call 2 takes build-1 from the log and ships it." />
+<ElicitationReplay />
 
 ## Ask the agent, too
 

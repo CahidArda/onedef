@@ -1,0 +1,46 @@
+---
+title: A published SDK
+description: The contract plus a transport, bundled for npm. There is no handler code in it to leak.
+---
+
+```ts title="src/index.ts"
+import { createClient, type ApiClient } from 'onedef'
+import { rpc } from '@onedef/orpc/client'
+import { contract } from './contract'
+
+export type Acme = ApiClient<typeof contract>
+
+export const createAcme = (options: { apiKey: string; url?: string }): Acme =>
+  createClient(contract, rpc({
+    url: options.url ?? 'https://api.acme.dev/api',
+    auth: () => ({ apiKey: options.apiKey }),
+  }))
+```
+
+```ts
+const acme = createAcme({ apiKey: process.env.ACME_API_KEY! })
+await acme.songs.list({ q: 'piaf' })
+```
+
+Handlers live in `implement()`, which only your server imports, so they can't end up in the
+bundle. Users get the same types, the same validation and the same `ApiError` codes as your
+own app.
+
+For an API you [describe](/docs/define/existing-api) rather than run, swap `rpc()` for
+`http()`.
+
+## Ship the other clients too
+
+The same package can carry a [CLI](/docs/clients/cli) and a local MCP server, both from the
+same contract:
+
+```ts title="src/mcp.ts"
+#!/usr/bin/env node
+import { serveMcpStdio } from '@onedef/mcp'
+import { rpc } from '@onedef/orpc/client'
+import { contract } from './contract'
+
+await serveMcpStdio(contract, { transport: rpc({ url: 'https://api.acme.dev/api' }) })
+```
+
+`ACME_API_KEY=… npx acme-mcp` then works in any MCP client. See [MCP server](/docs/serve/mcp).

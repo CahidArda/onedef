@@ -15,11 +15,11 @@ Under `/api` you now have:
 | path | what |
 | --- | --- |
 | `/api/songs`, `/api/songs/{slug}`, `/api/songs/{slug}/rename`, … | REST, one route per operation |
-| `/api/rpc/*` | the RPC endpoint that `rpc({ url: '/api' })` calls |
+| `/api/rpc/*` | the RPC endpoint the [typed client](/docs/clients) calls with `rpc({ url: '/api' })` |
 | `/api/openapi.json` | the OpenAPI document, generated from the contract |
 
-REST routes follow conventions where the name says it all, and give every other operation
-its own path segment:
+Routes follow conventions where the name says it all; every other operation gets its own
+path segment:
 
 | op | route |
 | --- | --- |
@@ -32,8 +32,8 @@ its own path segment:
 
 ## Outside Next.js
 
-`toFetchHandler(backend)` is the same thing as one `(request: Request) => Promise<Response>`
-function, for Hono, Bun, Deno, Cloudflare Workers or anything else that speaks fetch.
+`toFetchHandler(backend)` is the same thing as one `(request: Request) => Promise<Response>`,
+for Hono, Bun, Deno, Cloudflare Workers or anything that speaks fetch.
 
 ```ts
 import { toFetchHandler } from '@onedef/orpc'
@@ -47,10 +47,10 @@ Bun.serve({ fetch: handler })
 ```ts
 toNextHandlers(backend, {
   prefix: '/api',                                   // where the route file is mounted
-  openapi: { title: 'Misrava API', description },    // defaults come from defineConfig
+  openapi: { title: 'Acme API', description },    // defaults come from defineConfig
   cors: 'https://app.example.com',                  // off by default; `true` allows any origin
 })
 ```
 
 `generateOpenApi(contract)` builds the same document at build time, from the contract alone.
-That's how the [API docs](/docs/surfaces/api-docs) are generated.
+That's how the [API docs](/docs/serve/api-docs) are generated.
