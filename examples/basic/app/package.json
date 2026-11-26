@@ -1,0 +1,36 @@
+{
+  "name": "@example/basic-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "tsx server/main.ts",
+    "demo": "tsx scripts/demo.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@example/basic-contract": "workspace:*",
+    "@hono/node-server": "^1.19.0",
+    "@modelcontextprotocol/server": "^2",
+    "@onedef/mcp": "workspace:*",
+    "@onedef/orpc": "workspace:*",
+    "@orpc/client": "^1",
+    "@orpc/openapi": "^1",
+    "@orpc/server": "^1",
+    "onedef": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "sirv": "^3.0.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.0.0"
+  }
+}

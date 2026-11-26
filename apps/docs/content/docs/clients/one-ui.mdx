@@ -1,0 +1,134 @@
+---
+title: One UI, web and MCP App
+description: The same screens run on your website and inside Claude or ChatGPT. Only the transport changes.
+---
+
+```ts title="lib/client.ts"
+import { createClient } from 'onedef'
+import { mcpApp } from '@onedef/mcp/app'
+import { rpc } from '@onedef/orpc/client'
+
+export const api = createClient(contract, mcpApp() ?? rpc({ url: '/api' }))
+```
+
+That line is the whole trick. Build your screens on `api`, and they run in two places:
+
+<OneUi />
+
+| | on your website | inside Claude or ChatGPT |
+| --- | --- | --- |
+| the page comes from | your web app | your MCP server, as an [MCP App](https://modelcontextprotocol.io) |
+| `mcpApp()` returns | `undefined` | a transport |
+| a call goes | over `fetch` to `/api` (oRPC) | as an MCP tool call, through the host, to `/mcp` |
+| who answers | your `backend` | the same `backend` |
+
+`mcpApp()` knows synchronously where it is: the MCP server marks the HTML it serves, so
+there is no handshake to wait for. The browser side is about 3 kB, with no dependencies.
+
+## With Next.js
+
+`@onedef/next` builds the MCP App during `next build` and `next dev`. You add one file next
+to your pages.
+
+<Steps>
+
+<Step>
+
+### Wrap the Next config
+
+```ts title="next.config.ts"
+import { withOnedef } from '@onedef/next'
+
+export default withOnedef(nextConfig)
+```
+
+</Step>
+
+<Step>
+
+### Map tool calls to screens
+
+```tsx title="app/mcp-app.tsx"
+import { defineMcpApp } from '@onedef/next/mcp-app'
+import { contract } from '@/lib/contract'
+import { HomeScreen } from '@/screens/home'
+import { SongScreen } from '@/screens/song'
+
+export default defineMcpApp(contract, {
+  routes: {
+    '/': { screen: HomeScreen, openedBy: ['songs.list'] },
+    '/songs/:slug': { screen: SongScreen, openedBy: ['songs.get'] },   // :slug ← the call's input.slug
+  },
+})
+```
+
+- `openedBy` lists the tool calls that open a screen. Params are read from the call's input
+  by name, and become the screen's props.
+- A route without `openedBy` (`'/about': AboutScreen`) is reached by navigating in the app.
+- When a param's name differs from the input field, map it per op:
+  `openedBy: { 'songs.get': ({ input }) => ({ id: input.slug }) }`.
+
+A wrong operation, an input without the route's params, or a screen whose props don't fit
+its pattern is a compile error.
+
+</Step>
+
+<Step>
+
+### Serve it from `/mcp`
+
+```ts title="app/mcp/route.ts"
+import { createMcpHandler } from '@onedef/mcp'
+import { serveMcpApp } from '@onedef/next/server'
+import { backend } from '@/lib/backend'
+
+const handler = createMcpHandler(backend, {
+  app: serveMcpApp({ tools: ['songs.list', 'songs.get'] }),   // these tool calls open the UI
+})
+export { handler as GET, handler as POST, handler as DELETE }
+```
+
+`tools` is checked against the contract. Every tool stays callable from inside the UI.
+
+</Step>
+
+</Steps>
+
+Ask Claude to "show me *La Vie en rose*". It calls `songs_get`, and your song screen opens
+in the conversation. The tool's result is already in the [query cache](/docs/clients/tanstack-query),
+so the screen renders without a second call.
+
+No Vite config, no extra script: `next build` ships one self-contained HTML file with the
+`/mcp` route, and `next dev` rebuilds it as you edit.
+
+## What differs inside a host
+
+| | on the website | inside the host |
+| --- | --- | --- |
+| navigation | Next's router | `useMcpRouter()` from `@onedef/next/mcp-app` |
+| embeds (YouTube, maps) | iframes | blocked: show a thumbnail and `openLink(url)` from `@onedef/mcp/app` |
+| theme | yours | `applyHostTheme()` follows the host's light or dark mode |
+
+Give screens their `Link` / `useNavigate` from a small module of your own that picks the
+right router, and the screens themselves stay identical.
+
+## Without Next.js
+
+Build the UI as one self-contained HTML file (any framework, bundled inline) and hand it
+to the MCP handler:
+
+```ts
+import { readFile } from 'node:fs/promises'
+
+createMcpHandler(backend, {
+  app: {
+    html: () => readFile('mcp-app/dist/index.html', 'utf8'),
+    tools: ['songs.get', 'songs.list'],                    // default: every query
+    csp: { resourceDomains: ['https://i.ytimg.com'] },   // origins the UI may load from
+  },
+})
+```
+
+In the UI, `await launch(contract)` from `@onedef/mcp/app` returns the tool call that opened
+it (`{ service: 'songs', op: 'get', input: { slug } }`), so you can route to the right
+screen.

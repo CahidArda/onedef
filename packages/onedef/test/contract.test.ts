@@ -23,7 +23,7 @@ import {
 const Song = z.object({ slug: z.string(), title: z.string(), secret: z.string().optional() })
 
 const config = defineConfig({
-  name: 'misrava',
+  name: 'acme',
   scopes: { team: { header: 'X-Team', description: 'team', required: true } },
   modes: ['apikey', 'oauth'],
 })

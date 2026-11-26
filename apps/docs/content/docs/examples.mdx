@@ -1,23 +1,84 @@
 ---
 title: Examples
-description: Complete projects in the repository, from a five-minute API to a full app.
+description: Runnable projects in the repository, from a five-minute API to every surface at once.
 ---
 
-| example | what it shows |
-| --- | --- |
-| [`examples/quickstart`](https://github.com/CahidArda/onedef/tree/main/examples/quickstart) | The [quick start](/docs/quickstart): a notes API in Next.js with REST, OpenAPI and MCP. |
-| [`examples/basic`](https://github.com/CahidArda/onedef/tree/main/examples/basic) | Every surface from one contract: a React app with `/api` and `/mcp`, a CLI with login, a stdio MCP server, a published SDK and a Mintlify docs site. Runs offline. |
-| [`examples/upstash`](https://github.com/CahidArda/onedef/tree/main/examples/upstash) | [Describing an existing API](/docs/guides/existing-api): part of the Upstash API, called directly, with one operation implemented locally. |
-| [`examples/mcp-workflow`](https://github.com/CahidArda/onedef/tree/main/examples/mcp-workflow) | The [elicitation workflow](/docs/mcp-elicitation-workflow) on a plain MCP SDK server. An agent writes a guide, the user approves a deploy and fills in a release form. It has a scripted test, an [eve](https://www.npmjs.com/package/eve) eval CI runs, and a script that compares it with plain MCP elicitation through Claude Code. |
+Every example lives in [`examples/`](https://github.com/CahidArda/onedef/tree/main/examples)
+and runs from a clone of the repository:
 
-## A full app: Misrava
+```bash
+pnpm install && pnpm build    # once: builds the onedef packages
+```
 
-[Misrava](https://github.com/CahidArda/misrava) teaches French songs line by line. It's built
-on onedef end to end:
+Each README lists the folders, the commands, and what to try with `curl`, the CLI and an MCP
+client.
 
-- **The contract:** songs and concepts as collections, the lesson pipeline as actions.
-- **One UI:** the website, and the same screens rendered inside Claude as an MCP App.
-- **Auth:** every page and endpoint behind Clerk; MCP clients sign in with OAuth (CIMD).
-- **A process:** the connected agent can write a lesson itself, part by part, with
-  `songs_translate_start` / `_next`. The website's button runs the same process with
-  OpenAI.
+| example | what it shows | features |
+| --- | --- | --- |
+| [quickstart](#quickstart) | A notes API in Next.js | contract, backend, REST, OpenAPI, MCP, typed client |
+| [basic](#basic) | Every surface from one contract, offline | + CLI, stdio MCP, SDK, Mintlify docs, credential modes |
+| [upstash](#upstash) | An API that already exists, described | `http` descriptors, mixing in one implemented op |
+| [mcp-workflow](#mcp-workflow) | MCP tools that ask and continue, no onedef contract | elicitation workflow, agent and human input, evals |
+
+## quickstart
+
+The finished code of the [quick start](/docs/quickstart): a `notes` collection, its
+handlers, and two Next.js route files for REST + OpenAPI and `/mcp`. A client page calls the
+API through the typed client.
+
+```bash
+pnpm --filter @example/quickstart dev    # http://localhost:3000
+```
+
+[`examples/quickstart`](https://github.com/CahidArda/onedef/tree/main/examples/quickstart) ·
+docs: [Contract](/docs/define/contract), [Backend](/docs/define/backend),
+[REST](/docs/serve/rest), [MCP](/docs/serve/mcp)
+
+## basic
+
+One contract for a toy Redis host, with handlers over an in-memory store, and every surface
+built from it: a React app with `/api` and `/mcp` in one Vite process, a CLI with login, a
+stdio MCP server that forwards to the app, a releasable SDK that bundles the contract but
+never the backend, and a Mintlify site. `forMode` hides tokens from the public MCP endpoint
+and the docs.
+
+```bash
+pnpm --filter @example/basic-app dev     # http://localhost:3000, then the CLI, MCP and SDK against it
+```
+
+[`examples/basic`](https://github.com/CahidArda/onedef/tree/main/examples/basic) ·
+docs: [CLI](/docs/clients/cli), [SDK](/docs/clients/sdk), [MCP](/docs/serve/mcp),
+[API docs](/docs/serve/api-docs)
+
+## upstash
+
+Part of the real Upstash developer API as a contract. Each op says where it already lives,
+so the SDK, CLI and MCP server call the API directly, with no onedef server. One op,
+`query`, has no upstream endpoint and is implemented with `@upstash/redis`. `stub.mjs` stands
+in for the API, so it runs offline.
+
+```bash
+node examples/upstash/stub.mjs &
+export UPSTASH_API_URL=http://localhost:4010 UPSTASH_EMAIL=me@example.com UPSTASH_API_KEY=key
+pnpm --filter @example/upstash-cli cli redis list
+```
+
+[`examples/upstash`](https://github.com/CahidArda/onedef/tree/main/examples/upstash) ·
+docs: [Describing an existing API](/docs/define/existing-api)
+
+## mcp-workflow
+
+The [elicitation workflow](/docs/mcp-elicitation-workflow) on a plain MCP SDK server. The
+agent writes a guide step by step, the user approves a deploy and fills in a release form,
+and no step runs twice. It has a scripted test, an [eve](https://www.npmjs.com/package/eve)
+eval that CI runs, and a script that compares it with plain MCP elicitation through Claude
+Code.
+
+```bash
+pnpm --filter @example/mcp-workflow-server start    # http://localhost:3333/mcp
+```
+
+[`examples/mcp-workflow`](https://github.com/CahidArda/onedef/tree/main/examples/mcp-workflow) ·
+docs: [Asking the agent](/docs/mcp-elicitation-workflow/asking-the-agent),
+[Asking a human](/docs/mcp-elicitation-workflow/asking-a-human),
+[Run stores](/docs/mcp-elicitation-workflow/run-stores)

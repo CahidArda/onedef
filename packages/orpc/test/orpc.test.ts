@@ -18,11 +18,11 @@ import { generateOpenApi, toFetchHandler, toNextHandlers } from '../src/index.js
 const Song = z.object({ slug: z.string(), title: z.string(), offsetMs: z.number() })
 
 const config = defineConfig({
-  name: 'misrava',
+  name: 'acme',
   description: 'French song lessons.',
   version: '1.2.3',
   scopes: { team: { header: 'X-Team-Id', description: 'The team the call runs in.', required: true } },
-  auth: { apiKey: { env: 'MISRAVA_KEY' } },
+  auth: { apiKey: { env: 'ACME_KEY' } },
 })
 
 const songs = defineService(config, {
@@ -189,7 +189,7 @@ test('CORS and Next.js handlers', async () => {
 test('/api/openapi.json', async () => {
   const res = await handler(new Request('http://test/api/openapi.json'))
   const doc = (await res.json()) as any
-  assert.equal(doc.info.title, 'misrava')
+  assert.equal(doc.info.title, 'acme')
   assert.equal(doc.info.version, '1.2.3')
   assert.deepEqual(Object.keys(doc.paths).sort(), [
     '/api/songs',

@@ -1,0 +1,31 @@
+---
+title: API docs
+description: An API reference generated from the contract, as an OpenAPI document or a Mintlify site.
+---
+
+The OpenAPI document is always served at `/api/openapi.json` (see
+[REST](/docs/serve/rest)). Point Scalar, Redoc, Swagger UI or any OpenAPI viewer at it.
+
+For a full docs site, `@onedef/docs` writes a [Mintlify](https://mintlify.com) site from the
+contract at build time, with no running server:
+
+```ts title="scripts/docs.ts"
+import { writeMintlifySite } from '@onedef/docs'
+import { generateOpenApi } from '@onedef/orpc'
+import { contract } from '../lib/contract'
+
+const spec = await generateOpenApi(contract, { servers: [{ url: 'https://api.acme.dev' }] })
+
+await writeMintlifySite(contract, {
+  dir: new URL('../docs', import.meta.url),
+  name: 'Acme',
+  spec,
+})
+```
+
+Each service becomes a page, with its description as the intro and one entry per
+operation.
+
+To leave some fields or operations out of public docs, generate them from
+`forMode(contract, 'public')`, a version of the contract that only shows what that
+credential mode may see.

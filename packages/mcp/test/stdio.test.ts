@@ -10,7 +10,7 @@ test('serveMcpStdio: credentials from env and bound scope reach the backend', as
     new StdioClientTransport({
       command: process.execPath,
       args: ['--import', 'tsx', fileURLToPath(new URL('./stdio-server.ts', import.meta.url))],
-      env: { ...(process.env as Record<string, string>), MISRAVA_KEY: 'k-123' },
+      env: { ...(process.env as Record<string, string>), ACME_KEY: 'k-123' },
     }),
   )
   try {

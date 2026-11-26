@@ -17,9 +17,9 @@ importers:
       '@changesets/cli':
         specifier: ^3.0.3
         version: 3.0.3
-      '@example/cli':
+      '@example/basic-cli':
         specifier: workspace:*
-        version: link:examples/basic/apps/cli
+        version: link:examples/basic/cli
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
@@ -100,11 +100,11 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  examples/basic/apps/app:
+  examples/basic/app:
     dependencies:
-      '@example/recipe':
+      '@example/basic-contract':
         specifier: workspace:*
-        version: link:../../packages/recipe
+        version: link:../contract
       '@hono/node-server':
         specifier: ^1.19.0
         version: 1.19.17(hono@4.13.3)
@@ -113,10 +113,10 @@ importers:
         version: 2.0.0
       '@onedef/mcp':
         specifier: workspace:*
-        version: link:../../../../packages/mcp
+        version: link:../../../packages/mcp
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../packages/orpc
+        version: link:../../../packages/orpc
       '@orpc/client':
         specifier: ^1
         version: 1.15.0(@opentelemetry/api@1.10.0)
@@ -128,7 +128,7 @@ importers:
         version: 1.15.0(@opentelemetry/api@1.10.0)(crossws@0.4.17(srvx@1.0.8))(ws@8.21.3)
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -161,39 +161,39 @@ importers:
         specifier: ^7.0.0
         version: 7.3.6(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12)(yaml@2.9.1)
 
-  examples/basic/apps/cli:
+  examples/basic/cli:
     dependencies:
-      '@example/recipe':
+      '@example/basic-contract':
         specifier: workspace:*
-        version: link:../../packages/recipe
+        version: link:../contract
       '@onedef/cli':
         specifier: workspace:*
-        version: link:../../../../packages/cli
+        version: link:../../../packages/cli
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../packages/orpc
+        version: link:../../../packages/orpc
       '@orpc/client':
         specifier: ^1
         version: 1.15.0(@opentelemetry/api@1.10.0)
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
     devDependencies:
       tsx:
         specifier: ^4.0.0
         version: 4.23.12
 
-  examples/basic/apps/docs/scripts:
+  examples/basic/docs/scripts:
     dependencies:
-      '@example/recipe':
+      '@example/basic-contract':
         specifier: workspace:*
-        version: link:../../../packages/recipe
+        version: link:../../contract
       '@onedef/docs':
         specifier: workspace:*
-        version: link:../../../../../packages/docs
+        version: link:../../../../packages/docs
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../../packages/orpc
+        version: link:../../../../packages/orpc
       '@orpc/openapi':
         specifier: ^1
         version: 1.15.0(@opentelemetry/api@1.10.0)(crossws@0.4.17(srvx@1.0.8))(ws@8.21.3)
@@ -202,7 +202,7 @@ importers:
         version: 1.15.0(@opentelemetry/api@1.10.0)(crossws@0.4.17(srvx@1.0.8))(ws@8.21.3)
       onedef:
         specifier: workspace:*
-        version: link:../../../../../packages/onedef
+        version: link:../../../../packages/onedef
     devDependencies:
       mint:
         specifier: ^4.2.0
@@ -211,26 +211,26 @@ importers:
         specifier: ^4.0.0
         version: 4.23.12
 
-  examples/basic/apps/mcp:
+  examples/basic/mcp:
     dependencies:
-      '@example/recipe':
+      '@example/basic-contract':
         specifier: workspace:*
-        version: link:../../packages/recipe
+        version: link:../contract
       '@modelcontextprotocol/server':
         specifier: ^2
         version: 2.0.0
       '@onedef/mcp':
         specifier: workspace:*
-        version: link:../../../../packages/mcp
+        version: link:../../../packages/mcp
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../packages/orpc
+        version: link:../../../packages/orpc
       '@orpc/client':
         specifier: ^1
         version: 1.15.0(@opentelemetry/api@1.10.0)
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
     devDependencies:
       '@modelcontextprotocol/client':
         specifier: ^2
@@ -239,23 +239,23 @@ importers:
         specifier: ^4.0.0
         version: 4.23.12
 
-  examples/basic/packages/recipe:
+  examples/basic/contract:
     dependencies:
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       zod:
         specifier: ^4.2.0
         version: 4.4.3
 
-  examples/basic/packages/sdk:
+  examples/basic/sdk:
     dependencies:
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../packages/orpc
+        version: link:../../../packages/orpc
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       zod:
         specifier: ^4.2.0
         version: 4.4.3
@@ -267,9 +267,9 @@ importers:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.33)(tsx@4.23.12)(typescript@7.0.2)(yaml@2.9.1)
 
-  examples/mcp-workflow/apps/agent:
+  examples/mcp-workflow/agent:
     dependencies:
-      '@example/workflow-server':
+      '@example/mcp-workflow-server':
         specifier: workspace:*
         version: link:../server
       '@hono/node-server':
@@ -277,7 +277,7 @@ importers:
         version: 1.19.17(hono@4.13.3)
       '@onedef/mcp-elicitation-workflow':
         specifier: workspace:*
-        version: link:../../../../packages/mcp-elicitation-workflow
+        version: link:../../../packages/mcp-elicitation-workflow
       ai:
         specifier: ^7.0.173
         version: 7.0.173(zod@4.4.3)
@@ -295,7 +295,7 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  examples/mcp-workflow/apps/server:
+  examples/mcp-workflow/server:
     dependencies:
       '@hono/node-server':
         specifier: ^1.19.0
@@ -305,7 +305,7 @@ importers:
         version: 2.0.0
       '@onedef/mcp-elicitation-workflow':
         specifier: workspace:*
-        version: link:../../../../packages/mcp-elicitation-workflow
+        version: link:../../../packages/mcp-elicitation-workflow
       '@upstash/redis':
         specifier: ^1.35.0
         version: 1.38.2
@@ -326,23 +326,23 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  examples/quickstart/apps/web:
+  examples/quickstart:
     dependencies:
       '@modelcontextprotocol/server':
         specifier: ^2
         version: 2.0.0
       '@onedef/mcp':
         specifier: workspace:*
-        version: link:../../../../packages/mcp
+        version: link:../../packages/mcp
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../packages/orpc
+        version: link:../../packages/orpc
       next:
         specifier: ^16.2.9
         version: 16.4.6(@opentelemetry/api@1.10.0)(@types/node@24.13.3)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../packages/onedef
       react:
         specifier: ^19.2.4
         version: 19.2.8
@@ -366,7 +366,7 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  examples/upstash/apps/app:
+  examples/upstash/app:
     dependencies:
       '@hono/node-server':
         specifier: ^1.19.0
@@ -376,10 +376,10 @@ importers:
         version: 2.0.0
       '@onedef/mcp':
         specifier: workspace:*
-        version: link:../../../../packages/mcp
+        version: link:../../../packages/mcp
       '@onedef/orpc':
         specifier: workspace:*
-        version: link:../../../../packages/orpc
+        version: link:../../../packages/orpc
       '@orpc/client':
         specifier: ^1
         version: 1.15.0(@opentelemetry/api@1.10.0)
@@ -389,15 +389,15 @@ importers:
       '@orpc/server':
         specifier: ^1
         version: 1.15.0(@opentelemetry/api@1.10.0)(crossws@0.4.17(srvx@1.0.8))(ws@8.21.3)
-      '@upstash-example/recipe':
+      '@example/upstash-contract':
         specifier: workspace:*
-        version: link:../../packages/recipe
+        version: link:../contract
       dotenv:
         specifier: ^17.0.0
         version: 17.4.2
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       react:
         specifier: ^19.0.0
         version: 19.2.8
@@ -427,25 +427,25 @@ importers:
         specifier: ^7.0.0
         version: 7.3.6(@types/node@26.6.6)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.23.12)(yaml@2.9.1)
 
-  examples/upstash/packages/cli:
+  examples/upstash/cli:
     devDependencies:
       '@onedef/cli':
         specifier: workspace:*
-        version: link:../../../../packages/cli
-      '@upstash-example/recipe':
+        version: link:../../../packages/cli
+      '@example/upstash-contract':
         specifier: workspace:*
-        version: link:../recipe
+        version: link:../contract
       dotenv:
         specifier: ^17.0.0
         version: 17.4.2
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       tsx:
         specifier: ^4.0.0
         version: 4.23.12
 
-  examples/upstash/packages/mcp:
+  examples/upstash/mcp:
     devDependencies:
       '@modelcontextprotocol/client':
         specifier: ^2
@@ -455,37 +455,37 @@ importers:
         version: 2.0.0
       '@onedef/mcp':
         specifier: workspace:*
-        version: link:../../../../packages/mcp
-      '@upstash-example/recipe':
+        version: link:../../../packages/mcp
+      '@example/upstash-contract':
         specifier: workspace:*
-        version: link:../recipe
+        version: link:../contract
       dotenv:
         specifier: ^17.0.0
         version: 17.4.2
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       tsx:
         specifier: ^4.0.0
         version: 4.23.12
 
-  examples/upstash/packages/recipe:
+  examples/upstash/contract:
     dependencies:
       '@upstash/redis':
         specifier: ^1.38.0
         version: 1.38.2
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       zod:
         specifier: ^4.2.0
         version: 4.4.3
 
-  examples/upstash/packages/sdk:
+  examples/upstash/sdk:
     dependencies:
       onedef:
         specifier: workspace:*
-        version: link:../../../../packages/onedef
+        version: link:../../../packages/onedef
       zod:
         specifier: ^4.2.0
         version: 4.4.3

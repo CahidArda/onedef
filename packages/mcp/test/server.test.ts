@@ -31,7 +31,7 @@ const handler = createMcpHandler(backend, {
 
 test('tools/list: names, schemas, annotations, app meta only on app tools', async () => {
   const client = await connect(handler)
-  assert.equal(client.getServerVersion()?.name, 'misrava')
+  assert.equal(client.getServerVersion()?.name, 'acme')
   assert.equal(client.getServerVersion()?.version, '1.2.3')
   assert.equal(client.getInstructions(), 'French song lessons.')
 
@@ -52,8 +52,8 @@ test('tools/list: names, schemas, annotations, app meta only on app tools', asyn
   assert.equal(get.outputSchema?.type, 'object')
   assert.deepEqual(get.annotations, { title: 'Get one lesson', readOnlyHint: true, openWorldHint: true })
   assert.deepEqual(get._meta, {
-    ui: { resourceUri: 'ui://misrava/app.html', visibility: ['model', 'app'] },
-    'ui/resourceUri': 'ui://misrava/app.html',
+    ui: { resourceUri: 'ui://acme/app.html', visibility: ['model', 'app'] },
+    'ui/resourceUri': 'ui://acme/app.html',
   })
 
   assert.equal(byName.songs_list!.outputSchema, undefined, 'array outputs declare no outputSchema')
@@ -109,9 +109,9 @@ test('resources/read: the app, with marker and csp', async () => {
   const { resources } = await client.listResources()
   assert.deepEqual(
     resources.map((resource) => [resource.uri, resource.mimeType]),
-    [['ui://misrava/app.html', 'text/html;profile=mcp-app']],
+    [['ui://acme/app.html', 'text/html;profile=mcp-app']],
   )
-  const { contents } = await client.readResource({ uri: 'ui://misrava/app.html' })
+  const { contents } = await client.readResource({ uri: 'ui://acme/app.html' })
   const [content] = contents as unknown as [{ text: string; mimeType: string; _meta: Record<string, unknown> }]
   assert.equal(content.mimeType, 'text/html;profile=mcp-app')
   assert.equal(

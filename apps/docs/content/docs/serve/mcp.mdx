@@ -1,0 +1,69 @@
+---
+title: MCP server
+description: Every operation becomes an MCP tool that Claude, ChatGPT and Cursor can call. One route file.
+---
+
+```ts title="app/mcp/route.ts"
+import { createMcpHandler } from '@onedef/mcp'
+import { backend } from '@/lib/backend'
+
+const handler = createMcpHandler(backend)   // (request: Request) => Promise<Response>
+export { handler as GET, handler as POST, handler as DELETE }
+```
+
+That's an MCP server over Streamable HTTP at `/mcp`, with one tool per operation:
+
+| op | tool | annotations |
+| --- | --- | --- |
+| `songs.list` | `songs_list` | `readOnlyHint` (a query) |
+| `songs.rename` | `songs_rename` | none |
+| `songs.delete` | `songs_delete` | `destructiveHint` |
+
+Titles, descriptions and input schemas come from the contract. Results are structured
+content matching your output schema; errors are tool errors the agent can read.
+
+## Connect a client
+
+```bash
+claude mcp add --transport http myapp https://myapp.com/mcp
+```
+
+In Claude.ai or ChatGPT, add the same URL as a custom connector.
+
+## Run handlers here, or forward
+
+```ts
+createMcpHandler(backend)                                          // runs the handlers in process
+createMcpHandler(contract, { transport: rpc({ url: API_URL }) })   // forwards to a deployed backend
+```
+
+The second form has no handler code: it calls your API like any other
+[client](/docs/clients). Use it in front of an API that runs elsewhere, or one you only
+[describe](/docs/define/existing-api).
+
+## Local, over stdio
+
+```ts
+import { serveMcpStdio } from '@onedef/mcp'
+
+await serveMcpStdio(contract, { transport: rpc({ url: API_URL }) })
+```
+
+Credentials come from the environment variable your `auth` config names, so
+`ACME_API_KEY=… npx acme-mcp` just works. See [A published SDK](/docs/clients/sdk).
+
+## Sign-in
+
+With `auth`, `/mcp` requires an OAuth token. Without one it answers `401` with the discovery
+header, and clients like Claude open your sign-in page. See [Auth](/docs/guides/auth).
+
+```ts
+createMcpHandler(backend, {
+  auth: { verify: async (request) => isValidToken(request), resourceMetadataUrl },
+})
+```
+
+## Show a UI
+
+Pass `app`, and the tool calls you choose open your own screens inside the conversation:
+the same screens as your website. See [One UI, web and MCP App](/docs/clients/one-ui).

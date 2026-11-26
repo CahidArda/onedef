@@ -18,7 +18,7 @@ const redirectFor = (port: number) => `http://127.0.0.1:${port}/callback`
 export interface ClientMetadataOptions {
   /** The URL this document is served at: under CIMD the URL *is* the client id. */
   clientId: string
-  /** Shown on the consent screen, e.g. "Misrava CLI". */
+  /** Shown on the consent screen, e.g. "Acme CLI". */
   clientName: string
   clientUri?: string
   /** Loopback ports the CLI listens on. Must match the CLI's `oauth.ports`. */
@@ -31,7 +31,7 @@ export interface ClientMetadataOptions {
  * no secret, and exactly the loopback redirect URIs `login` can use.
  *
  *   // app/oauth/cli.json/route.ts
- *   export const GET = () => Response.json(cliClientMetadata({ clientId: 'https://misrava.app/oauth/cli.json', clientName: 'Misrava CLI' }))
+ *   export const GET = () => Response.json(cliClientMetadata({ clientId: 'https://acme.dev/oauth/cli.json', clientName: 'Acme CLI' }))
  */
 export function cliClientMetadata(options: ClientMetadataOptions): CliClientMetadata {
   return { client_id: options.clientId, ...clientMetadata(options) }

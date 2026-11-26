@@ -1,0 +1,24 @@
+{
+  "name": "@example/basic-mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "stdio": "tsx src/main.ts",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/main.ts",
+    "verify": "tsx src/verify.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@example/basic-contract": "workspace:*",
+    "@modelcontextprotocol/server": "^2",
+    "@onedef/mcp": "workspace:*",
+    "@onedef/orpc": "workspace:*",
+    "@orpc/client": "^1",
+    "onedef": "workspace:*"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2",
+    "tsx": "^4.0.0"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@example/upstash-mcp",
+  "version": "0.0.0",
+  "description": "MCP stdio server for Upstash Redis databases. Publishable: the contract is bundled, not released. Remove `private` to publish.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "upstash-redis-mcp": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "stdio": "tsx src/main.ts",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/main.ts",
+    "verify": "tsx src/verify.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2",
+    "@modelcontextprotocol/server": "^2",
+    "@onedef/mcp": "workspace:*",
+    "@example/upstash-contract": "workspace:*",
+    "dotenv": "^17.0.0",
+    "onedef": "workspace:*",
+    "tsx": "^4.0.0"
+  }
+}

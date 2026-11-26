@@ -1,7 +1,7 @@
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-/** `misrava` → `MISRAVA_CONFIG_DIR`. */
+/** `acme` → `ACME_CONFIG_DIR`. */
 export const configDirEnv = (bin: string) => `${bin.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase()}_CONFIG_DIR`
 
 export function credentialsPath(bin: string, env: Record<string, string | undefined>): string {

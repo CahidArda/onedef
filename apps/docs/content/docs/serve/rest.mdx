@@ -1,0 +1,56 @@
+---
+title: REST, RPC and OpenAPI
+description: One fetch handler serves REST routes, the RPC endpoint the typed client calls, and an OpenAPI document.
+---
+
+```ts title="app/api/[[...route]]/route.ts"
+import { toNextHandlers } from '@onedef/orpc'
+import { backend } from '@/lib/backend'
+
+export const { GET, POST, PUT, PATCH, DELETE, OPTIONS } = toNextHandlers(backend)
+```
+
+Under `/api` you now have:
+
+| path | what |
+| --- | --- |
+| `/api/songs`, `/api/songs/{slug}`, `/api/songs/{slug}/rename`, … | REST, one route per operation |
+| `/api/rpc/*` | the RPC endpoint the [typed client](/docs/clients) calls with `rpc({ url: '/api' })` |
+| `/api/openapi.json` | the OpenAPI document, generated from the contract |
+
+Routes follow conventions where the name says it all; every other operation gets its own
+path segment:
+
+| op | route |
+| --- | --- |
+| `list` | `GET /songs` |
+| `get` | `GET /songs/{slug}` (a singleton's `get`: `GET /account`) |
+| `create` | `POST /songs` |
+| `delete` | `DELETE /songs/{slug}` |
+| an action | `POST /songs/{slug}/rename` |
+| any other query or mutation | `GET` / `POST /songs/<op-name>` |
+
+## Outside Next.js
+
+`toFetchHandler(backend)` is the same thing as one `(request: Request) => Promise<Response>`,
+for Hono, Bun, Deno, Cloudflare Workers or anything that speaks fetch.
+
+```ts
+import { toFetchHandler } from '@onedef/orpc'
+
+const handler = toFetchHandler(backend, { prefix: '/api' })
+Bun.serve({ fetch: handler })
+```
+
+## Options
+
+```ts
+toNextHandlers(backend, {
+  prefix: '/api',                                   // where the route file is mounted
+  openapi: { title: 'Acme API', description },    // defaults come from defineConfig
+  cors: 'https://app.example.com',                  // off by default; `true` allows any origin
+})
+```
+
+`generateOpenApi(contract)` builds the same document at build time, from the contract alone.
+That's how the [API docs](/docs/serve/api-docs) are generated.

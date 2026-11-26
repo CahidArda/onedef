@@ -1,13 +1,13 @@
 # onedef
 
-📖 **Docs:** [`apps/docs`](./apps/docs) (Fumadocs). Run `pnpm --filter @onedef/site dev`.
+📖 **Docs:** [onedef.cahidarda.com/docs](https://onedef.cahidarda.com/docs) (source in [`apps/docs`](./apps/docs); run it with `pnpm --filter @onedef/site dev`). **Examples:** [below](#examples).
 
 **Define your API once.** Get a backend, a typed client, REST + OpenAPI, a CLI
 with login, an MCP server, an MCP App and docs, all from one contract.
 
 ```ts
 // contract.ts — shipped everywhere. No server code in here.
-export const config = defineConfig({ name: 'misrava', auth: { oauth: { scopes: ['profile'] } } })
+export const config = defineConfig({ name: 'acme', auth: { oauth: { scopes: ['profile'] } } })
 
 export const songs = collection(config, {
   name: 'songs',
@@ -91,7 +91,7 @@ and `paginate: 'cursor'` adds `cursor`/`limit` and returns `{ items, nextCursor 
 ```ts
 list: { input: z.object({ q: z.string().optional() }), paginate: 'cursor' }
 // web:  useInfiniteQuery(q.songs.list.infiniteQueryOptions({ q: 'piaf' }))
-// CLI:  misrava songs list --q piaf --limit 20   → table, then "More: … --cursor 20"
+// CLI:  acme songs list --q piaf --limit 20   → table, then "More: … --cursor 20"
 ```
 
 An action with `needs: 'object'` gets the current object loaded through `get`
@@ -338,8 +338,21 @@ defineConfig({
 Schemas are any [Standard Schema](https://standardschema.dev) validator with
 JSON Schema support (zod 4.2 and later, arktype, valibot). Nothing to register.
 
-See [`DESIGN.md`](./DESIGN.md) for the architecture, and `examples/` for the
-complete thing.
+See [`DESIGN.md`](./DESIGN.md) for the architecture.
+
+## Examples
+
+Each one runs from the repo root after `pnpm install && pnpm build`; its README has the
+commands and what to try.
+
+| example | what it shows |
+| --- | --- |
+| [`examples/quickstart`](./examples/quickstart) | The [quick start](https://onedef.cahidarda.com/docs/quickstart): a notes API in Next.js with REST, OpenAPI, MCP and a typed page. |
+| [`examples/basic`](./examples/basic) | Every surface from one contract: a React app with `/api` and `/mcp`, a CLI, a stdio MCP server, a releasable SDK and a Mintlify site. Offline. |
+| [`examples/upstash`](./examples/upstash) | [Describing an existing API](https://onedef.cahidarda.com/docs/define/existing-api): part of the Upstash API called directly, with one op implemented locally. Offline with `stub.mjs`. |
+| [`examples/mcp-workflow`](./examples/mcp-workflow) | The [elicitation workflow](https://onedef.cahidarda.com/docs/mcp-elicitation-workflow) on a plain MCP SDK server: the agent and the user answer steps, nothing runs twice. Tests and an eve eval. |
+
+More in the docs: [Examples](https://onedef.cahidarda.com/docs/examples).
 
 ## Develop
 

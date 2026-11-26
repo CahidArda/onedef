@@ -4,10 +4,10 @@ import { defineApi, defineConfig, defineService, fail, implement, mutation, quer
 const Song = z.object({ slug: z.string(), title: z.string() })
 
 export const config = defineConfig({
-  name: 'misrava',
+  name: 'acme',
   version: '1.2.3',
   description: 'French song lessons.',
-  auth: { apiKey: { env: 'MISRAVA_KEY' } },
+  auth: { apiKey: { env: 'ACME_KEY' } },
   scopes: { team: { header: 'X-Team', description: 'The team id', required: false } },
 })
 

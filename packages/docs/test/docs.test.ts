@@ -9,7 +9,7 @@ import { defineApi, defineConfig, defineService, mutation, query } from 'onedef'
 import { generateOpenApi } from '../../orpc/src/index.js'
 import { toDocsJson, toMintlify, writeMintlifySite } from '../src/index.js'
 
-const config = defineConfig({ name: 'misrava', description: 'French song lessons.' })
+const config = defineConfig({ name: 'acme', description: 'French song lessons.' })
 const Song = z.object({ slug: z.string(), title: z.string() })
 const songs = defineService(config, {
   name: 'songs',
@@ -52,7 +52,7 @@ test('overview page: description, summaries, destructive warning, MDX-safe prose
 
 test('docs.json defaults come from the config', () => {
   const docs = toDocsJson(contract, { openapi: '/openapi.json' })
-  assert.equal(docs.name, 'misrava')
+  assert.equal(docs.name, 'acme')
   assert.equal(docs.description, 'French song lessons.')
 })
 

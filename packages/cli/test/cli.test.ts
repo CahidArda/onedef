@@ -8,7 +8,7 @@ import { run } from './helpers.js'
 const Song = z.object({ slug: z.string(), title: z.string(), plays: z.number(), tags: z.array(z.string()) })
 
 const config = defineConfig({
-  name: 'misrava',
+  name: 'acme',
   description: 'French song lessons.',
   scopes: { team: { header: 'X-Team', description: 'Team to act in', required: true } },
 })
@@ -108,7 +108,7 @@ test('command tree: paths, args, typed flags, scope flags, destructive, columns'
 test('help: root, service and command', async () => {
   const root = await run(contract, ['--help'], { transport: local(backendWith()) })
   assert.equal(root.code, 0)
-  assert.match(root.stdout, /Usage: misrava <command>/)
+  assert.match(root.stdout, /Usage: acme <command>/)
   assert.match(root.stdout, /songs set-offset <slug>\s+Shift the lyrics/)
   assert.doesNotMatch(root.stdout, /login/) // no auth declared, no auth commands
 
@@ -118,12 +118,12 @@ test('help: root, service and command', async () => {
 
   const help = renderCommandHelp(
     toCommands(contract).find((c) => c.op === 'create')!,
-    'misrava',
+    'acme',
   )
   assert.equal(
     help,
     [
-      'Usage: misrava songs create --team <string> --title <string> [flags]',
+      'Usage: acme songs create --team <string> --title <string> [flags]',
       '',
       'Create a lesson',
       '',
@@ -221,9 +221,9 @@ test('exit codes: not found 3, invalid input 2, usage 2', async () => {
 })
 
 test('toSkillMarkdown describes every command', () => {
-  const skill = toSkillMarkdown(contract, { bin: 'misrava', description: 'Manage lessons: list, create, delete.' })
-  assert.match(skill, /^---\nname: misrava-cli\ndescription: "Manage lessons: list, create, delete\."\n---/)
-  assert.match(skill, /### `misrava songs set-offset <slug> --offset-ms <number> \[--loop\]`/)
+  const skill = toSkillMarkdown(contract, { bin: 'acme', description: 'Manage lessons: list, create, delete.' })
+  assert.match(skill, /^---\nname: acme-cli\ndescription: "Manage lessons: list, create, delete\."\n---/)
+  assert.match(skill, /### `acme songs set-offset <slug> --offset-ms <number> \[--loop\]`/)
   assert.match(skill, /\*\*Destructive\*\*: requires `--yes`/)
   assert.doesNotMatch(skill, /## Authentication/)
 })

@@ -1,0 +1,46 @@
+---
+title: TanStack Query
+description: Query keys, mutations and cache updates, worked out from the contract.
+---
+
+```ts title="lib/query.ts"
+import { createQueryUtils } from '@onedef/query'
+import { api } from './client'   // any transport: rpc(), mcpApp() ?? rpc(), local()
+
+export const q = createQueryUtils(contract, api)
+```
+
+```tsx
+const song = useQuery(q.songs.get.queryOptions({ slug }))
+const rename = useMutation(q.songs.rename.mutationOptions())
+
+rename.mutate({ slug, title: 'La Vie en rose' })
+// songs.get for this slug updates from the result; songs.list refetches
+```
+
+You never write a query key or an `onSuccess`:
+
+- **Keys** come from the contract: `['onedef', service, op, input]`.
+- **A mutation invalidates** its service's reads, plus any service it names in `affects`.
+- **An action that returns the object** (`output` is the collection's `fields`) writes the
+  result straight into the `get` cache.
+- **A delete** removes the object from the cache.
+
+Because it sits on the [typed client](/docs/clients), the same hooks work on the web and
+[inside an MCP App](/docs/clients/one-ui).
+
+## Paginated lists
+
+For a list declared with `paginate: 'cursor'`:
+
+```tsx
+const pages = useInfiniteQuery(q.songs.list.infiniteQueryOptions({ q: 'piaf' }))
+```
+
+## Server-rendered data
+
+```tsx
+useQuery({ ...q.songs.get.queryOptions({ slug }), initialData: initial })
+```
+
+The React, Vue, Solid and Svelte adapters of TanStack Query v5 all work.
